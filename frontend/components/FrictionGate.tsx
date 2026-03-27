@@ -30,6 +30,7 @@ interface FrictionGateProps {
     selected_idea: number | null;
     weakness: string;
     strategy: string;
+    dwell_seconds: number;
   }) => void;
 }
 
@@ -47,7 +48,8 @@ export function FrictionGate({ visible, taskType, onComplete }: FrictionGateProp
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    onComplete({ selected_idea: selectedIdea, weakness, strategy });
+    const dwell_seconds = (Date.now() - startTime.current) / 1000;
+    onComplete({ selected_idea: selectedIdea, weakness, strategy, dwell_seconds });
   };
 
   const weaknessLabel = taskType === "metaphor" ? "main weakness in that direction" : "main problem with this idea";

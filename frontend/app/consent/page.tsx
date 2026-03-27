@@ -32,6 +32,7 @@ function ConsentContent() {
   const setParticipant = useStore((s) => s.setParticipant);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Read condition from URL — e.g. /consent?condition=friction
   const rawCondition = searchParams.get("condition");
@@ -42,6 +43,7 @@ function ConsentContent() {
   const handleContinue = async () => {
     if (!agreed || loading) return;
     setLoading(true);
+    setError(null);
     try {
       const data = await api.initParticipant(condition ?? undefined);
       setParticipant({
@@ -54,7 +56,7 @@ function ConsentContent() {
       await api.recordConsent(data.participant_id);
       router.push("/instructions");
     } catch (err) {
-      console.error(err);
+      setError(err instanceof Error ? err.message : "Failed to connect to server. Please make sure the backend is running.");
       setLoading(false);
     }
   };
@@ -147,6 +149,12 @@ function ConsentContent() {
             </span>
           </label>
         </div>
+
+        {error && (
+          <div className="glass-card p-4 border border-red-200/50 bg-red-50/60">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
 
         <Button
           onClick={handleContinue}

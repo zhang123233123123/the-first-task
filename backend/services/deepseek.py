@@ -124,12 +124,13 @@ def _add_provocateur_cards(suggestions: list[dict], task_type: str) -> list[dict
 
     import json
     data = json.loads(response.choices[0].message.content)
-    provocations = {p["id"]: p for p in data.get("provocations", [])}
+    # Normalise IDs to int so "1" and 1 both match
+    provocations = {int(p["id"]): p for p in data.get("provocations", []) if "id" in p}
 
     for s in suggestions:
         sid = s.get("id")
-        if sid in provocations:
-            s["provocateur"] = provocations[sid]
+        if sid is not None and int(sid) in provocations:
+            s["provocateur"] = provocations[int(sid)]
 
     return suggestions
 

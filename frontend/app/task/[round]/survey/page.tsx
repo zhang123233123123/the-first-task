@@ -103,8 +103,9 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     }
   };
 
-  const totalSteps = round === 1 ? 5 : 9;
-  const stepOffset = round === 1 ? 5 : 9;
+  // Total progress steps across the whole study: 4 task pages + 7 survey blocks per round × 2
+  const TOTAL_STEPS = 18;
+  const progressStep = round === 1 ? 5 + block : 12 + block;
 
   return (
     <div className="healing-bg min-h-screen flex items-center justify-center px-4 py-12">
@@ -116,8 +117,8 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
         className="w-full max-w-xl space-y-6"
       >
         <ProgressBar
-          step={round === 1 ? 5 + block : 9}
-          total={9}
+          step={progressStep}
+          total={TOTAL_STEPS}
           label={`Task ${round} questionnaire — section ${block + 1} of ${BLOCKS.length}`}
         />
 

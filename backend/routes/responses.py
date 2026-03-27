@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy.orm.attributes import flag_modified
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Any
@@ -109,9 +110,10 @@ def save_post_task(payload: PostTaskPayload, db: Session = Depends(get_db)):
 @router.post("/log-event")
 def log_event(payload: LogEventPayload, db: Session = Depends(get_db)):
     session = _get_session_or_404(db, payload.participant_id, payload.task_round)
-    log = session.interaction_log or []
+    log = list(session.interaction_log or [])
     log.append({**payload.event, "timestamp": datetime.utcnow().isoformat()})
     session.interaction_log = log
+    flag_modified(session, "interaction_log")
     db.commit()
     return {"status": "ok"}
 

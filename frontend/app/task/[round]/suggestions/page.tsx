@@ -50,13 +50,16 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   }, [round, setCurrentRound]);
 
   useEffect(() => {
-    if (!participantId) return;
+    if (!participantId) {
+      router.replace("/consent");
+      return;
+    }
     setError(null);
     api.getSuggestions(participantId, round)
       .then((d) => setData(d as unknown as SuggestionsData))
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [participantId, round]);
+  }, [participantId, round, router]);
 
   const taskType = (data?.task_type ?? taskOrder[round - 1] ?? "story") as "story" | "metaphor";
   const prompt = data?.prompt as Record<string, unknown> | undefined;
@@ -77,8 +80,9 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
     setShowGate(false);
     setGateCompleted(true);
     if (participantId) {
-      const dwell = (Date.now() - viewStart.current) / 1000;
-      await api.saveGate(participantId, round, gateResponses, dwell);
+      // dwell_seconds comes from FrictionGate itself (measured from gate open)
+      const { dwell_seconds, ...responses } = gateResponses as Record<string, unknown> & { dwell_seconds: number };
+      await api.saveGate(participantId, round, responses, dwell_seconds);
     }
     router.push(`/task/${round}/production`);
   };

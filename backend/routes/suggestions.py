@@ -47,7 +47,6 @@ def get_suggestions(
 
     # Determine task type from order
     task_type = p.task_order[task_round - 1]
-    prompt = _get_prompt(task_type, task_round)
 
     # Generate suggestions
     try:
