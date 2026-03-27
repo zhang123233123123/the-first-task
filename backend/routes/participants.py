@@ -22,11 +22,20 @@ class ProgressPayload(BaseModel):
     current_page: str
 
 
+class InitPayload(BaseModel):
+    condition: str | None = None  # if None, assign randomly
+
+
 @router.post("/init")
-def init_participant(db: Session = Depends(get_db)):
-    """Create a new participant with random condition assignment."""
+def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends(get_db)):
+    """Create a new participant. Condition can be specified or randomly assigned."""
     participant_id = str(uuid.uuid4())
-    condition = random.choice(CONDITIONS)
+
+    if payload.condition and payload.condition in CONDITIONS:
+        condition = payload.condition
+    else:
+        condition = random.choice(CONDITIONS)
+
     task_order = random.choice(TASK_ORDERS)
 
     p = Participant(

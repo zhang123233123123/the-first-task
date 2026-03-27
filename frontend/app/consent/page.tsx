@@ -1,24 +1,49 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { Leaf, Clock, Shield, Users } from "lucide-react";
 
+const VALID_CONDITIONS = ["control", "provocateur", "friction", "combined"] as const;
+type Condition = typeof VALID_CONDITIONS[number];
+
+const CONDITION_LABELS: Record<Condition, string> = {
+  control:     "Standard",
+  provocateur: "Challenge mode",
+  friction:    "Reflection mode",
+  combined:    "Challenge + Reflection",
+};
+
 export default function ConsentPage() {
+  return (
+    <Suspense>
+      <ConsentContent />
+    </Suspense>
+  );
+}
+
+function ConsentContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setParticipant = useStore((s) => s.setParticipant);
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
+
+  // Read condition from URL — e.g. /consent?condition=friction
+  const rawCondition = searchParams.get("condition");
+  const condition = VALID_CONDITIONS.includes(rawCondition as Condition)
+    ? (rawCondition as Condition)
+    : null;
 
   const handleContinue = async () => {
     if (!agreed || loading) return;
     setLoading(true);
     try {
-      const data = await api.initParticipant();
+      const data = await api.initParticipant(condition ?? undefined);
       setParticipant({
         participantId: data.participant_id,
         conditionId: data.condition_id,
@@ -47,6 +72,11 @@ export default function ConsentPage() {
           <div className="inline-flex items-center gap-2 bg-[var(--sage-light)]/30 text-[var(--sage-dark)] text-xs font-medium px-3 py-1.5 rounded-full">
             <Leaf className="w-3.5 h-3.5" />
             Research Study
+            {condition && (
+              <span className="ml-1 text-[var(--warm-gray)]">
+                · {CONDITION_LABELS[condition]}
+              </span>
+            )}
           </div>
           <h1 className="text-3xl font-semibold text-[var(--warm-brown)] tracking-tight">
             Creativity &amp; AI Study

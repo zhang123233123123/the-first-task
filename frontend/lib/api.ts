@@ -14,14 +14,17 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 // ── Participants ──────────────────────────────────────────────
 export const api = {
-  initParticipant: () =>
+  initParticipant: (condition?: string) =>
     request<{
       participant_id: string;
       condition_id: string;
       provocateur_flag: boolean;
       friction_flag: boolean;
       task_order: string[];
-    }>("/participants/init", { method: "POST" }),
+    }>("/participants/init", {
+      method: "POST",
+      body: JSON.stringify({ condition: condition ?? null }),
+    }),
 
   getParticipant: (id: string) =>
     request<{

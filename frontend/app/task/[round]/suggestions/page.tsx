@@ -30,7 +30,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const round = parseInt(roundStr, 10);
 
   const router = useRouter();
-  const { participantId, frictionFlag, taskOrder, setCurrentRound } = useStore();
+  const { participantId, taskOrder, setCurrentRound } = useStore();
   const [data, setData] = useState<SuggestionsData | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [showGate, setShowGate] = useState(false);
@@ -38,6 +38,12 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const viewStart = useRef(Date.now());
+
+  // Source of truth for conditions comes from the backend API response,
+  // not the local store — this ensures conditions are always correctly applied
+  // even after page refresh.
+  const provocateurActive = data?.provocateur_flag ?? false;
+  const frictionActive = data?.friction_flag ?? false;
 
   useEffect(() => {
     setCurrentRound(round);
@@ -55,14 +61,12 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const taskType = (data?.task_type ?? taskOrder[round - 1] ?? "story") as "story" | "metaphor";
   const prompt = data?.prompt as Record<string, unknown> | undefined;
 
-  const canContinue = selected !== null && (gateCompleted || !frictionFlag);
-
   const handleContinue = () => {
-    if (frictionFlag && !gateCompleted) {
+    // Friction condition: must complete the reflection gate before proceeding
+    if (frictionActive && !gateCompleted) {
       setShowGate(true);
       return;
     }
-    // log selection
     if (participantId) {
       api.logEvent(participantId, round, { type: "suggestion_selected", suggestion_id: selected });
     }
@@ -170,7 +174,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
                 id={s.id}
                 suggestion={s.suggestion}
                 provocateur={s.provocateur}
-                showProvocateur={data?.provocateur_flag ?? false}
+                showProvocateur={provocateurActive}
                 selected={selected === s.id}
                 onSelect={() => setSelected(s.id)}
               />
@@ -184,7 +188,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
           size="lg"
           className="w-full"
         >
-          {frictionFlag && !gateCompleted ? "Reflect & continue" : "Continue to writing"}
+          {frictionActive && !gateCompleted ? "Reflect & continue" : "Continue to writing"}
         </Button>
       </motion.div>
 
