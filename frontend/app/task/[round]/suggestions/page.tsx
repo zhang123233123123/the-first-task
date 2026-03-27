@@ -36,6 +36,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const [showGate, setShowGate] = useState(false);
   const [gateCompleted, setGateCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const viewStart = useRef(Date.now());
 
   useEffect(() => {
@@ -44,8 +45,10 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
 
   useEffect(() => {
     if (!participantId) return;
+    setError(null);
     api.getSuggestions(participantId, round)
       .then((d) => setData(d as unknown as SuggestionsData))
+      .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
   }, [participantId, round]);
 
@@ -87,6 +90,20 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
           <Sparkles className="w-4 h-4 text-[var(--sage)]" />
           Generating suggestions…
         </motion.div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="healing-bg min-h-screen flex items-center justify-center px-4">
+        <div className="glass-card p-8 max-w-md w-full text-center space-y-3">
+          <p className="text-[var(--warm-brown)] font-medium">Could not load suggestions</p>
+          <p className="text-sm text-[var(--warm-gray)] break-all">{error}</p>
+          <p className="text-xs text-[var(--warm-gray)]">
+            Please make sure the backend is running and your DeepSeek API key is set in <code>backend/.env</code>.
+          </p>
+        </div>
       </div>
     );
   }

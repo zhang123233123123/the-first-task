@@ -50,14 +50,25 @@ def get_suggestions(
     prompt = _get_prompt(task_type, task_round)
 
     # Generate suggestions
-    if task_type == "story":
-        cue_words = STORY_CUE_WORDS[(task_round - 1) % len(STORY_CUE_WORDS)]
-        suggestions = get_story_suggestions(cue_words, p.provocateur_flag)
-        display_prompt = {"type": "story", "cue_words": cue_words, "instruction": prompt}
-    else:
-        metaphor_prompt = METAPHOR_PROMPTS[(task_round - 1) % len(METAPHOR_PROMPTS)]
-        suggestions = get_metaphor_suggestions(metaphor_prompt, p.provocateur_flag)
-        display_prompt = {"type": "metaphor", "metaphor_prompt": metaphor_prompt, "instruction": prompt}
+    try:
+        if task_type == "story":
+            cue_words = STORY_CUE_WORDS[(task_round - 1) % len(STORY_CUE_WORDS)]
+            suggestions = get_story_suggestions(cue_words, p.provocateur_flag)
+            display_prompt = {
+                "type": "story",
+                "cue_words": cue_words,
+                "instruction": f"Write a creative story of about 4–6 sentences using all three words: {', '.join(cue_words)}.",
+            }
+        else:
+            metaphor_prompt = METAPHOR_PROMPTS[(task_round - 1) % len(METAPHOR_PROMPTS)]
+            suggestions = get_metaphor_suggestions(metaphor_prompt, p.provocateur_flag)
+            display_prompt = {
+                "type": "metaphor",
+                "metaphor_prompt": metaphor_prompt,
+                "instruction": "Complete the metaphor as creatively as possible.",
+            }
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
 
     # Create or update session
     if not session:

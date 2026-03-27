@@ -33,7 +33,7 @@ def get_story_suggestions(cue_words: list[str], include_provocateur: bool) -> li
     user_prompt = (
         f"Generate 3 distinct creative story directions using these three words: {', '.join(cue_words)}.\n"
         "Each direction should be a short premise (2-3 sentences) that a writer could develop.\n"
-        "Format as JSON array: [{\"id\": 1, \"suggestion\": \"...\"}]"
+        "Return a JSON object: {\"suggestions\": [{\"id\": 1, \"suggestion\": \"...\"}, ...]}"
     )
 
     response = client.chat.completions.create(
@@ -48,7 +48,7 @@ def get_story_suggestions(cue_words: list[str], include_provocateur: bool) -> li
 
     import json
     data = json.loads(response.choices[0].message.content)
-    suggestions = data.get("suggestions", data.get("directions", []))
+    suggestions = _extract_list(data)
 
     if include_provocateur:
         suggestions = _add_provocateur_cards(suggestions, "story")
@@ -83,7 +83,7 @@ def get_metaphor_suggestions(prompt: str, include_provocateur: bool) -> list[dic
 
     import json
     data = json.loads(response.choices[0].message.content)
-    suggestions = data.get("suggestions", [])
+    suggestions = _extract_list(data)
 
     if include_provocateur:
         suggestions = _add_provocateur_cards(suggestions, "metaphor")
@@ -132,3 +132,19 @@ def _add_provocateur_cards(suggestions: list[dict], task_type: str) -> list[dict
             s["provocateur"] = provocations[sid]
 
     return suggestions
+
+
+def _extract_list(data) -> list:
+    """Robustly extract a list from whatever JSON DeepSeek returns."""
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict):
+        # Try common keys first
+        for key in ("suggestions", "directions", "items", "results", "metaphors"):
+            if key in data and isinstance(data[key], list):
+                return data[key]
+        # Fall back to first list value found
+        for v in data.values():
+            if isinstance(v, list):
+                return v
+    return []
