@@ -36,7 +36,7 @@ export default function InstructionsPage() {
     {
       icon: PenLine,
       title: "Your own voice",
-      desc: "Use the suggestions as a springboard. You decide what to keep, adapt, or ignore. The final response is always yours.",
+      desc: "Use the suggestions as a template. You decide what to keep, adapt, or ignore. The final response is always yours.",
       color: "var(--peach-light)",
       iconColor: "var(--peach)",
     },

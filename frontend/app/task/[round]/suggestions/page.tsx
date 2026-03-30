@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
-import { AlertTriangle, ArrowRight, BookOpen, HelpCircle, PenLine, Sparkles } from "lucide-react";
+import { BookOpen, MessageCircle, PenLine, Send, Sparkles } from "lucide-react";
 
 const MIN_CHARS = 80;
 const TASK_TIME_LIMIT_SECONDS = 5 * 60;
@@ -46,6 +46,8 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const [showGate, setShowGate] = useState(false);
   const [gateCompleted, setGateCompleted] = useState(false);
   const [text, setText] = useState("");
+  const [chatReply, setChatReply] = useState("");
+  const [chatHistory, setChatHistory] = useState<{ role: "ai" | "user"; text: string }[]>([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
   const [promptLoading, setPromptLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -137,6 +139,13 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
     router.push(`/task/${round}/survey`);
   };
 
+  const handleChatSend = () => {
+    const trimmed = chatReply.trim();
+    if (!trimmed) return;
+    setChatHistory((prev) => [...prev, { role: "user", text: trimmed }]);
+    setChatReply("");
+  };
+
   const handleGateComplete = async (gateResponses: Record<string, unknown>) => {
     setShowGate(false);
     setGateCompleted(true);
@@ -166,7 +175,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
                 <Sparkles className="w-4 h-4 text-[var(--sage)]" />
                 <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
                   {hideDirections
-                    ? "Provocation"
+                    ? "AI Challenge"
                     : taskType === "story"
                     ? "Story Suggestions"
                     : "Metaphor Suggestions"}
@@ -196,32 +205,72 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
             </div>
 
             {provocateurActive && provocation && (
-              <div className="glass-card p-5 space-y-4">
-                <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
-                  Provocation
-                </p>
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <AlertTriangle className="w-4 h-4 text-[var(--peach)] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-semibold text-[var(--warm-gray)] uppercase tracking-wide mb-0.5">Risk</p>
-                      <p className="text-sm text-[var(--warm-brown)]">{provocation.risk}</p>
+              <div className="glass-card p-5 space-y-3 flex flex-col">
+                <div className="flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-[var(--lavender)]" />
+                  <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
+                    AI Challenge
+                  </p>
+                </div>
+
+                {/* Chat history */}
+                <div className="space-y-2 max-h-64 overflow-y-auto">
+                  {/* Initial AI provocation message */}
+                  <div className="flex gap-2 items-start">
+                    <div className="w-6 h-6 rounded-full bg-[var(--lavender-light)] flex-shrink-0 flex items-center justify-center mt-0.5">
+                      <MessageCircle className="w-3 h-3 text-[var(--lavender)]" />
+                    </div>
+                    <div className="bg-[var(--lavender-light)]/40 rounded-2xl rounded-tl-sm px-3 py-2 text-sm text-[var(--warm-brown)] leading-relaxed max-w-[85%]">
+                      <p className="text-xs text-[var(--warm-gray)] mb-1">{provocation.risk} Consider: {provocation.alternative}</p>
+                      <p className="italic">{provocation.question}</p>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <ArrowRight className="w-4 h-4 text-[var(--sage)] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-semibold text-[var(--warm-gray)] uppercase tracking-wide mb-0.5">Alternative</p>
-                      <p className="text-sm text-[var(--warm-brown)]">{provocation.alternative}</p>
+
+                  {/* User replies */}
+                  {chatHistory.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex gap-2 items-start ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+                    >
+                      <div className="bg-[var(--sage-light)]/50 rounded-2xl rounded-tr-sm px-3 py-2 text-sm text-[var(--warm-brown)] leading-relaxed max-w-[85%]">
+                        {msg.text}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <HelpCircle className="w-4 h-4 text-[var(--lavender)] flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="text-xs font-semibold text-[var(--warm-gray)] uppercase tracking-wide mb-0.5">Question</p>
-                      <p className="text-sm italic text-[var(--warm-brown)]">{provocation.question}</p>
-                    </div>
-                  </div>
+                  ))}
+                </div>
+
+                {/* Reply input */}
+                <div className="flex gap-2 items-end">
+                  <textarea
+                    value={chatReply}
+                    onChange={(e) => setChatReply(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleChatSend();
+                      }
+                    }}
+                    placeholder="Reply to AI (optional)…"
+                    rows={2}
+                    className="
+                      flex-1 rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
+                      px-3 py-2 text-sm text-[var(--warm-brown)]
+                      placeholder:text-[var(--warm-gray)]/50
+                      resize-none focus:outline-none focus:ring-2 focus:ring-[var(--lavender)]/30
+                    "
+                  />
+                  <button
+                    type="button"
+                    onClick={handleChatSend}
+                    disabled={!chatReply.trim()}
+                    className="
+                      w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
+                      bg-[var(--lavender-light)] text-[var(--lavender)] transition-opacity
+                      disabled:opacity-30
+                    "
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
             )}

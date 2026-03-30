@@ -10,7 +10,7 @@ from models import Participant
 
 router = APIRouter(prefix="/participants", tags=["participants"])
 
-CONDITIONS = ["control", "provocateur", "friction", "combined"]
+CONDITIONS = ["control", "provocateur", "friction", "prov_then_fric", "fric_then_prov"]
 TASK_ORDERS = [["story", "metaphor"], ["metaphor", "story"]]
 
 
@@ -38,11 +38,13 @@ def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends
 
     task_order = random.choice(TASK_ORDERS)
 
+    # Sequential conditions (prov_then_fric, fric_then_prov) have no global flags;
+    # per-round flags are computed in the suggestions route.
     p = Participant(
         participant_id=participant_id,
         condition_id=condition,
-        provocateur_flag=condition in ("provocateur", "combined"),
-        friction_flag=condition in ("friction", "combined"),
+        provocateur_flag=condition == "provocateur",
+        friction_flag=condition == "friction",
         task_order=task_order,
         current_page="consent",
     )

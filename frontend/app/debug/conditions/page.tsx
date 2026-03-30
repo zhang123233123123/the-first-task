@@ -9,24 +9,24 @@ import { api } from "@/lib/api";
 
 const CONDITIONS = [
   {
-    id: "control",
-    title: "Control",
-    desc: "Suggestions only, with no provocateur card and no reflection gate.",
-  },
-  {
     id: "provocateur",
-    title: "Provocateur",
-    desc: "Suggestions with attached challenge cards.",
+    title: "Provocateur only",
+    desc: "AI challenge chat panel shown during writing. No friction gate.",
   },
   {
     id: "friction",
-    title: "Friction",
-    desc: "Suggestions with the reflection gate before submission.",
+    title: "Friction only",
+    desc: "Reflection gate pop-up required before submission. No challenge chat.",
   },
   {
-    id: "combined",
-    title: "Combined",
-    desc: "Suggestions with both challenge cards and the reflection gate.",
+    id: "prov_then_fric",
+    title: "Provocation → Friction",
+    desc: "Task 1: AI challenge chat. Task 2: friction gate.",
+  },
+  {
+    id: "fric_then_prov",
+    title: "Friction → Provocation",
+    desc: "Task 1: friction gate. Task 2: AI challenge chat.",
   },
 ] as const;
 
@@ -56,8 +56,8 @@ export default function DebugConditionsPage() {
       });
 
       await api.recordConsent(data.participant_id);
-      await api.updateProgress(data.participant_id, "task/1/suggestions");
-      router.push("/task/1/suggestions");
+      await api.updateProgress(data.participant_id, "task/1/brief");
+      router.push("/task/1/brief");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create a test participant.");
       setLoading(null);

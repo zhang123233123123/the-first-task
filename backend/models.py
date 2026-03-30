@@ -10,7 +10,7 @@ class Participant(Base):
     participant_id = Column(String, unique=True, index=True)
 
     # Condition assignment
-    condition_id = Column(String)       # control / provocateur / friction / combined
+    condition_id = Column(String)       # control / provocateur / friction / prov_then_fric / fric_then_prov
     provocateur_flag = Column(Boolean, default=False)
     friction_flag = Column(Boolean, default=False)
     task_order = Column(JSON)           # e.g. ["story", "metaphor"] or reversed

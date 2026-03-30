@@ -27,15 +27,6 @@ type SelectItem = {
   options: string[];
 };
 
-type NumberItem = {
-  key: string;
-  label: string;
-  type: "number";
-  min?: number;
-  max?: number;
-  placeholder?: string;
-};
-
 type TextItem = {
   key: string;
   label: string;
@@ -51,7 +42,7 @@ type CheckboxItem = {
   helperText?: string;
 };
 
-type BaselineItem = ScaleItem | SelectItem | NumberItem | TextItem | CheckboxItem;
+type BaselineItem = ScaleItem | SelectItem | TextItem | CheckboxItem;
 
 type Block = {
   id: string;
@@ -90,159 +81,54 @@ const BLOCKS: Block[] = [
   {
     id: "ai_use",
     title: "Prior AI Use",
-    description: "The following questions ask about your prior experience with generative AI tools.",
+    description: "Please rate your experience with generative AI tools (e.g., ChatGPT).",
     items: [
       {
-        key: "ai_freq_general",
-        label: "How often do you use generative AI tools for any purpose?",
-        type: "scale",
-        points: 5,
-        lowLabel: "Never",
-        highLabel: "Almost always",
-      },
-      {
-        key: "ai_freq_writing",
-        label: "How often do you use generative AI tools for writing-related tasks?",
-        type: "scale",
-        points: 5,
-        lowLabel: "Never",
-        highLabel: "Almost always",
-      },
-      {
-        key: "ai_use_months",
-        label: "For about how long have you been using generative AI tools?",
-        type: "select",
-        options: [
-          "Less than 1 month",
-          "1-3 months",
-          "4-6 months",
-          "7-12 months",
-          "1-2 years",
-          "More than 2 years",
-        ],
-      },
-      {
         key: "ai_familiar",
-        label: "I am familiar with how to use generative AI tools to generate or improve written ideas.",
+        label: "How familiar are you with generative AI tools (e.g., ChatGPT)?",
         type: "scale",
+        lowLabel: "Not at all familiar",
+        highLabel: "Extremely familiar",
       },
       {
-        key: "ai_prompt_confident",
-        label: "I feel confident writing prompts or instructions for generative AI tools when I want a specific kind of output.",
+        key: "ai_freq_general",
+        label: "How often do you use generative AI tools?",
         type: "scale",
-      },
-      {
-        key: "ai_confident_creative",
-        label: "I feel confident using generative AI tools to support creative work.",
-        type: "scale",
-      },
-      {
-        key: "ai_brainstorm_before",
-        label: "I have used generative AI tools for brainstorming or idea generation before.",
-        type: "scale",
-      },
-      {
-        key: "ai_revise_before",
-        label: "I have used generative AI tools for revising or improving written content before.",
-        type: "scale",
-      },
-      {
-        key: "ai_writing_task_types",
-        label: "Which writing-related uses have you used generative AI for before?",
-        type: "checkboxes",
-        helperText: "Select all that apply.",
-        options: [
-          "Brainstorming ideas",
-          "Outlining",
-          "Drafting text",
-          "Revising or editing",
-          "Style polishing",
-          "Story or fiction writing",
-          "Metaphor or figurative writing",
-          "Summarizing",
-          "Translation",
-          "Other writing-related use",
-        ],
+        lowLabel: "Never",
+        highLabel: "Almost always",
       },
     ],
   },
   {
     id: "writing_exp",
     title: "Creative Writing Experience",
-    description: "The following questions ask about your previous experience with creative writing.",
+    description: "Please rate your creative writing experience.",
     items: [
       {
-        key: "write_freq",
-        label: "How often do you engage in creative writing activities?",
-        type: "scale",
-        points: 5,
-        lowLabel: "Never",
-        highLabel: "Almost always",
-      },
-      {
-        key: "write_years",
-        label: "For about how many years have you engaged in creative writing?",
-        type: "select",
-        options: [
-          "Less than 1 year",
-          "1-2 years",
-          "3-5 years",
-          "6-10 years",
-          "More than 10 years",
-        ],
-      },
-      {
-        key: "write_fiction",
-        label: "I have substantial prior experience writing short stories or fiction.",
-        type: "scale",
-      },
-      {
-        key: "write_shared",
-        label: "Have you previously shared or published creative writing?",
-        type: "select",
-        options: [
-          "No, never",
-          "Yes, shared informally (for example, with friends, online forums, or blogs)",
-          "Yes, formally published",
-        ],
-      },
-      {
-        key: "write_metaphor_familiar",
-        label: "I am comfortable using metaphor or figurative language in writing.",
-        type: "scale",
-      },
-      {
-        key: "write_course",
-        label: "What kind of formal writing instruction have you had?",
-        type: "select",
-        options: [
-          "No formal course or workshop",
-          "One short course or workshop",
-          "Multiple courses or workshops",
-          "Academic training in writing or literature",
-        ],
-      },
-      {
         key: "write_consider",
-        label: "I consider myself an experienced creative writer.",
+        label: "How much creative writing experience do you have?",
         type: "scale",
+        lowLabel: "No experience",
+        highLabel: "Very experienced",
       },
       {
-        key: "write_constraint",
-        label: "I am comfortable generating written content under time constraints.",
+        key: "write_freq",
+        label: "How often do you engage in creative writing?",
         type: "scale",
+        lowLabel: "Never",
+        highLabel: "Very frequently",
       },
     ],
   },
   {
     id: "cse",
     title: "Creative Confidence",
-    description: "Please indicate how strongly you agree or disagree with the following statements about your current creative ability.",
+    description: "Based on your current experience, please indicate how strongly you agree or disagree with the following statements.",
     items: [
-      { key: "cse_generate", label: "I am capable of generating creative ideas in writing tasks.", type: "scale" },
-      { key: "cse_develop", label: "I can develop an ordinary idea into something more original.", type: "scale" },
-      { key: "cse_confident", label: "I am confident in my ability to produce imaginative written content.", type: "scale" },
-      { key: "cse_improve", label: "I can improve a weak creative idea into a stronger one.", type: "scale" },
+      { key: "cse_generate", label: "Based on my current experience, I am capable of generating creative ideas in writing tasks.", type: "scale" },
+      { key: "cse_develop", label: "Based on my current experience, I can develop an ordinary idea into something more original.", type: "scale" },
+      { key: "cse_confident", label: "Based on my current experience, I am confident in my ability to produce imaginative written content.", type: "scale" },
+      { key: "cse_improve", label: "Based on my current experience, I can improve a weak creative idea into a stronger one.", type: "scale" },
     ],
   },
   {
@@ -253,20 +139,24 @@ const BLOCKS: Block[] = [
       {
         key: "demo_age",
         label: "What is your age?",
-        type: "number",
-        min: 18,
-        max: 120,
-        placeholder: "Enter your age in years",
+        type: "select",
+        options: [
+          "18-24",
+          "25-34",
+          "35-44",
+          "45-54",
+          "55-64",
+          "65 or older",
+          "Prefer not to say",
+        ],
       },
       {
         key: "demo_gender",
-        label: "What is your gender identity?",
+        label: "What is your gender?",
         type: "select",
         options: [
           "Woman",
           "Man",
-          "Non-binary",
-          "Prefer to self-describe",
           "Prefer not to say",
         ],
       },
@@ -317,10 +207,16 @@ const BLOCKS: Block[] = [
         ],
       },
       {
-        key: "demo_language",
-        label: "What is your primary language?",
-        type: "text",
-        placeholder: "Enter your primary language",
+        key: "demo_english",
+        label: "What is your English proficiency level?",
+        type: "select",
+        options: [
+          "Beginner",
+          "Proficient",
+          "Advanced",
+          "Native speaker",
+          "Prefer not to say",
+        ],
       },
       {
         key: "demo_prior_ai_study",
@@ -376,10 +272,10 @@ export default function BaselinePage() {
 
     if (participantId) {
       await api.saveBaseline(participantId, responses as Record<string, unknown>, elapsed);
-      await api.updateProgress(participantId, "task/1/suggestions");
+      await api.updateProgress(participantId, "task/1/brief");
     }
 
-    router.push("/task/1/suggestions");
+    router.push("/task/1/brief");
   };
 
   return (
@@ -416,29 +312,6 @@ export default function BaselinePage() {
                     lowLabel={item.lowLabel}
                     highLabel={item.highLabel}
                   />
-                );
-              }
-
-              if (item.type === "number") {
-                return (
-                  <div key={item.key} className="space-y-2">
-                    <label className="text-sm text-[var(--warm-brown)] leading-relaxed">{item.label}</label>
-                    <input
-                      type="number"
-                      min={item.min}
-                      max={item.max}
-                      inputMode="numeric"
-                      value={typeof responses[item.key] === "number" ? responses[item.key] : ""}
-                      onChange={(e) => setValue(item.key, e.target.value === "" ? null : Number(e.target.value))}
-                      placeholder={item.placeholder}
-                      className="
-                        w-full rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
-                        px-4 py-3 text-sm text-[var(--warm-brown)]
-                        placeholder:text-[var(--warm-gray)]/50
-                        focus:outline-none focus:ring-2 focus:ring-[var(--sage)]/40
-                      "
-                    />
-                  </div>
                 );
               }
 

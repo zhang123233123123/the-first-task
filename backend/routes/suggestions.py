@@ -16,6 +16,19 @@ import random
 router = APIRouter(prefix="/suggestions", tags=["suggestions"])
 
 
+def _round_flags(condition_id: str, task_round: int) -> tuple[bool, bool]:
+    """Return (provocateur_flag, friction_flag) for this specific round."""
+    if condition_id == "provocateur":
+        return True, False
+    if condition_id == "friction":
+        return False, True
+    if condition_id == "prov_then_fric":
+        return (True, False) if task_round == 1 else (False, True)
+    if condition_id == "fric_then_prov":
+        return (False, True) if task_round == 1 else (True, False)
+    return False, False  # control
+
+
 @router.get("/prompt/{participant_id}/{task_round}")
 def get_prompt(
     participant_id: str,
@@ -56,14 +69,16 @@ def get_suggestions(
         .first()
     )
 
+    prov_flag, fric_flag = _round_flags(p.condition_id, task_round)
+
     if session and session.suggestions_shown:
         return {
             "task_type": session.task_type,
             "prompt": _get_prompt(session.task_type, task_round),
             "suggestions": session.suggestions_shown,
             "provocation": session.provocation_shown,
-            "provocateur_flag": p.provocateur_flag,
-            "friction_flag": p.friction_flag,
+            "provocateur_flag": prov_flag,
+            "friction_flag": fric_flag,
         }
 
     # Determine task type from order
@@ -89,7 +104,7 @@ def get_suggestions(
             }
         provocation = (
             get_general_provocation(task_type, display_prompt["instruction"], suggestions)
-            if p.provocateur_flag
+            if prov_flag
             else None
         )
     except Exception as e:
@@ -113,8 +128,8 @@ def get_suggestions(
         "prompt": display_prompt,
         "suggestions": suggestions,
         "provocation": provocation,
-        "provocateur_flag": p.provocateur_flag,
-        "friction_flag": p.friction_flag,
+        "provocateur_flag": prov_flag,
+        "friction_flag": fric_flag,
     }
 
 
