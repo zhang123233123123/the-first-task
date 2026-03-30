@@ -26,6 +26,7 @@ const STRATEGY_OPTIONS = [
 interface FrictionGateProps {
   visible: boolean;
   taskType: "story" | "metaphor";
+  requireIdeaSelection?: boolean;
   onComplete: (responses: {
     selected_idea: number | null;
     weakness: string;
@@ -34,26 +35,43 @@ interface FrictionGateProps {
   }) => void;
 }
 
-export function FrictionGate({ visible, taskType, onComplete }: FrictionGateProps) {
+export function FrictionGate({
+  visible,
+  taskType,
+  requireIdeaSelection = true,
+  onComplete,
+}: FrictionGateProps) {
   const [selectedIdea, setSelectedIdea] = useState<number | null>(null);
   const [weakness, setWeakness] = useState("");
   const [strategy, setStrategy] = useState("");
-  const startTime = useRef(Date.now());
+  const startTime = useRef<number | null>(null);
 
   useEffect(() => {
     if (visible) startTime.current = Date.now();
   }, [visible]);
 
-  const canSubmit = selectedIdea !== null && weakness !== "" && strategy !== "";
+  const canSubmit = (!requireIdeaSelection || selectedIdea !== null) && weakness !== "" && strategy !== "";
 
   const handleSubmit = () => {
     if (!canSubmit) return;
-    const dwell_seconds = (Date.now() - startTime.current) / 1000;
+    const dwell_seconds = (Date.now() - (startTime.current ?? Date.now())) / 1000;
     onComplete({ selected_idea: selectedIdea, weakness, strategy, dwell_seconds });
   };
 
-  const weaknessLabel = taskType === "metaphor" ? "main weakness in that direction" : "main problem with this idea";
-  const strategyLabel = taskType === "metaphor" ? "revision strategy" : "next step";
+  const weaknessLabel = requireIdeaSelection
+    ? taskType === "metaphor"
+      ? "main weakness in that direction"
+      : "main problem with this idea"
+    : taskType === "metaphor"
+    ? "main weakness in your current approach"
+    : "main problem in your current direction";
+  const strategyLabel = requireIdeaSelection
+    ? taskType === "metaphor"
+      ? "revision strategy"
+      : "next step"
+    : taskType === "metaphor"
+    ? "revision strategy"
+    : "next step";
 
   return (
     <AnimatePresence>
@@ -84,35 +102,36 @@ export function FrictionGate({ visible, taskType, onComplete }: FrictionGateProp
               </div>
             </div>
 
-            {/* Step 1 */}
-            <div className="space-y-2.5">
-              <p className="text-sm font-medium text-[var(--warm-brown)]">
-                1. Which direction looks most promising?
-              </p>
-              <div className="flex gap-2">
-                {[1, 2, 3].map((n) => (
-                  <button
-                    key={n}
-                    type="button"
-                    onClick={() => setSelectedIdea(n)}
-                    className={`
-                      flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all duration-150
-                      ${selectedIdea === n
-                        ? "bg-[var(--sage)] text-white border-[var(--sage)]"
-                        : "bg-white/50 text-[var(--warm-gray)] border-white/60 hover:border-[var(--sage-light)]"
-                      }
-                    `}
-                  >
-                    Direction {n}
-                  </button>
-                ))}
+            {requireIdeaSelection && (
+              <div className="space-y-2.5">
+                <p className="text-sm font-medium text-[var(--warm-brown)]">
+                  1. Which direction looks most promising?
+                </p>
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => setSelectedIdea(n)}
+                      className={`
+                        flex-1 py-2.5 rounded-xl text-sm font-medium border transition-all duration-150
+                        ${selectedIdea === n
+                          ? "bg-[var(--sage)] text-white border-[var(--sage)]"
+                          : "bg-white/50 text-[var(--warm-gray)] border-white/60 hover:border-[var(--sage-light)]"
+                        }
+                      `}
+                    >
+                      Direction {n}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Step 2 */}
             <div className="space-y-2.5">
               <p className="text-sm font-medium text-[var(--warm-brown)]">
-                2. What is the {weaknessLabel}?
+                {requireIdeaSelection ? "2." : "1."} What is the {weaknessLabel}?
               </p>
               <div className="flex flex-wrap gap-2">
                 {WEAKNESS_OPTIONS.map((opt) => (
@@ -137,7 +156,7 @@ export function FrictionGate({ visible, taskType, onComplete }: FrictionGateProp
             {/* Step 3 */}
             <div className="space-y-2.5">
               <p className="text-sm font-medium text-[var(--warm-brown)]">
-                3. What is your {strategyLabel}?
+                {requireIdeaSelection ? "3." : "2."} What is your {strategyLabel}?
               </p>
               <div className="flex flex-wrap gap-2">
                 {STRATEGY_OPTIONS.map((opt) => (

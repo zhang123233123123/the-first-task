@@ -7,6 +7,7 @@ from models import Participant, TaskSession
 from services.deepseek import (
     get_story_suggestions,
     get_metaphor_suggestions,
+    get_general_provocation,
     STORY_CUE_WORDS,
     METAPHOR_PROMPTS,
 )
@@ -60,6 +61,7 @@ def get_suggestions(
             "task_type": session.task_type,
             "prompt": _get_prompt(session.task_type, task_round),
             "suggestions": session.suggestions_shown,
+            "provocation": session.provocation_shown,
             "provocateur_flag": p.provocateur_flag,
             "friction_flag": p.friction_flag,
         }
@@ -71,7 +73,7 @@ def get_suggestions(
     try:
         if task_type == "story":
             cue_words = STORY_CUE_WORDS[(task_round - 1) % len(STORY_CUE_WORDS)]
-            suggestions = get_story_suggestions(cue_words, p.provocateur_flag)
+            suggestions = get_story_suggestions(cue_words)
             display_prompt = {
                 "type": "story",
                 "cue_words": cue_words,
@@ -79,12 +81,17 @@ def get_suggestions(
             }
         else:
             metaphor_prompt = METAPHOR_PROMPTS[(task_round - 1) % len(METAPHOR_PROMPTS)]
-            suggestions = get_metaphor_suggestions(metaphor_prompt, p.provocateur_flag)
+            suggestions = get_metaphor_suggestions(metaphor_prompt)
             display_prompt = {
                 "type": "metaphor",
                 "metaphor_prompt": metaphor_prompt,
                 "instruction": "Complete the metaphor as creatively as possible.",
             }
+        provocation = (
+            get_general_provocation(task_type, display_prompt["instruction"], suggestions)
+            if p.provocateur_flag
+            else None
+        )
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
 
@@ -98,12 +105,14 @@ def get_suggestions(
         db.add(session)
 
     session.suggestions_shown = suggestions
+    session.provocation_shown = provocation
     db.commit()
 
     return {
         "task_type": task_type,
         "prompt": display_prompt,
         "suggestions": suggestions,
+        "provocation": provocation,
         "provocateur_flag": p.provocateur_flag,
         "friction_flag": p.friction_flag,
     }

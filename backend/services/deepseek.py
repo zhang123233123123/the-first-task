@@ -22,8 +22,8 @@ METAPHOR_PROMPTS = [
 ]
 
 
-def get_story_suggestions(cue_words: list[str], include_provocateur: bool) -> list[dict]:
-    """Generate 3 AI story suggestions, optionally with provocateur cards."""
+def get_story_suggestions(cue_words: list[str]) -> list[dict]:
+    """Generate 3 AI story suggestions."""
     system_prompt = (
         "You are a creative writing assistant helping with a research experiment. "
         "Generate creative, original story directions — not full stories, just compelling premises or directions. "
@@ -48,16 +48,11 @@ def get_story_suggestions(cue_words: list[str], include_provocateur: bool) -> li
 
     import json
     data = json.loads(response.choices[0].message.content)
-    suggestions = _extract_list(data)
-
-    if include_provocateur:
-        suggestions = _add_provocateur_cards(suggestions, "story")
-
-    return suggestions
+    return _extract_list(data)
 
 
-def get_metaphor_suggestions(prompt: str, include_provocateur: bool) -> list[dict]:
-    """Generate 3 AI metaphor directions, optionally with provocateur cards."""
+def get_metaphor_suggestions(prompt: str) -> list[dict]:
+    """Generate 3 AI metaphor directions."""
     system_prompt = (
         "You are a creative writing assistant helping with a research experiment. "
         "Generate creative, surprising metaphor directions — not full answers, just conceptual directions. "
@@ -83,19 +78,14 @@ def get_metaphor_suggestions(prompt: str, include_provocateur: bool) -> list[dic
 
     import json
     data = json.loads(response.choices[0].message.content)
-    suggestions = _extract_list(data)
-
-    if include_provocateur:
-        suggestions = _add_provocateur_cards(suggestions, "metaphor")
-
-    return suggestions
+    return _extract_list(data)
 
 
-def _add_provocateur_cards(suggestions: list[dict], task_type: str) -> list[dict]:
-    """Attach a provocateur challenge card to each suggestion."""
+def get_general_provocation(task_type: str, prompt_text: str, suggestions: list[dict]) -> dict:
+    """Generate one task-level provocateur card rather than suggestion-specific cards."""
     system_prompt = (
         "You are a creative critic in a research experiment. "
-        "For each idea, write a short provocation card that challenges assumptions and opens new directions. "
+        "Write one short provocation card that challenges assumptions and opens new directions. "
         "Be constructive, specific, and intellectually stimulating — not insulting."
     )
 
@@ -104,12 +94,14 @@ def _add_provocateur_cards(suggestions: list[dict], task_type: str) -> list[dict
     )
 
     user_prompt = (
-        f"For each of these {task_type} ideas, write a provocation card with exactly three parts:\n"
+        f"This participant is working on a {task_type} task.\n"
+        f"Prompt: {prompt_text}\n\n"
+        f"Here are the AI directions they can see:\n{suggestions_text}\n\n"
+        "Write one provocateur card for the task as a whole with exactly three parts:\n"
         "- Risk: one sentence identifying a cliché, weak assumption, or limitation\n"
         "- Alternative: one sentence proposing a substantially different direction\n"
         "- Question: one question pushing deeper rethinking\n\n"
-        f"Ideas:\n{suggestions_text}\n\n"
-        "Format as JSON: {\"provocations\": [{\"id\": 1, \"risk\": \"...\", \"alternative\": \"...\", \"question\": \"...\"}]}"
+        "Format as JSON: {\"risk\": \"...\", \"alternative\": \"...\", \"question\": \"...\"}"
     )
 
     response = client.chat.completions.create(
@@ -124,15 +116,11 @@ def _add_provocateur_cards(suggestions: list[dict], task_type: str) -> list[dict
 
     import json
     data = json.loads(response.choices[0].message.content)
-    # Normalise IDs to int so "1" and 1 both match
-    provocations = {int(p["id"]): p for p in data.get("provocations", []) if "id" in p}
-
-    for s in suggestions:
-        sid = s.get("id")
-        if sid is not None and int(sid) in provocations:
-            s["provocateur"] = provocations[int(sid)]
-
-    return suggestions
+    return {
+        "risk": data.get("risk", ""),
+        "alternative": data.get("alternative", ""),
+        "question": data.get("question", ""),
+    }
 
 
 def _extract_list(data) -> list:

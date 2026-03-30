@@ -9,18 +9,27 @@ import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
-import { BookOpen, PenLine, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, BookOpen, HelpCircle, PenLine, Sparkles } from "lucide-react";
+
+const MIN_CHARS = 80;
+const TASK_TIME_LIMIT_SECONDS = 5 * 60;
 
 interface Suggestion {
   id: number;
   suggestion: string;
-  provocateur?: { risk: string; alternative: string; question: string };
+}
+
+interface Provocation {
+  risk: string;
+  alternative: string;
+  question: string;
 }
 
 interface SuggestionsData {
   task_type: string;
   prompt: Record<string, unknown>;
   suggestions: Suggestion[];
+  provocation?: Provocation | null;
   provocateur_flag: boolean;
   friction_flag: boolean;
 }
@@ -42,10 +51,29 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const [saving, setSaving] = useState(false);
   const [suggestionsError, setSuggestionsError] = useState<string | null>(null);
   const [promptError, setPromptError] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(TASK_TIME_LIMIT_SECONDS);
+  const [timeExpired, setTimeExpired] = useState(false);
   const startTime = useRef<number | null>(null);
 
   useEffect(() => {
     startTime.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const startedAt = startTime.current;
+      if (startedAt === null) return;
+
+      const elapsed = Math.floor((Date.now() - startedAt) / 1000);
+      const remaining = Math.max(TASK_TIME_LIMIT_SECONDS - elapsed, 0);
+      setSecondsLeft(remaining);
+      if (remaining === 0) {
+        setTimeExpired(true);
+        window.clearInterval(timer);
+      }
+    }, 1000);
+
+    return () => window.clearInterval(timer);
   }, []);
 
   // Source of truth for conditions comes from the backend API response,
@@ -82,7 +110,11 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
 
   const taskType = (data?.task_type ?? taskOrder[round - 1] ?? "story") as "story" | "metaphor";
   const prompt = (promptData ?? data?.prompt ?? null) as Record<string, unknown> | null;
-  const canSubmit = text.trim().length >= 80 && !saving;
+  const canSubmit = !saving && (text.trim().length >= MIN_CHARS || timeExpired);
+  const provocation = data?.provocation ?? null;
+  const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
+  const seconds = String(secondsLeft % 60).padStart(2, "0");
+  const hideDirections = provocateurActive;
 
   const handleSubmit = () => {
     // Friction condition: must complete the reflection gate before proceeding
@@ -133,15 +165,82 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[var(--sage)]" />
                 <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
-                  {taskType === "story" ? "Story Suggestions" : "Metaphor Suggestions"}
+                  {hideDirections
+                    ? "Provocation"
+                    : taskType === "story"
+                    ? "Story Suggestions"
+                    : "Metaphor Suggestions"}
                 </p>
               </div>
               <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
-                Review the AI-generated directions on the left while you write. You may select one as your reference, adapt it, or ignore it.
+                {hideDirections
+                  ? "Use this provocation card as a challenge prompt while you write your own response."
+                  : "Review the AI-generated directions on the left while you write. You may select one as your reference, adapt it, or ignore it."}
               </p>
             </div>
 
-            {suggestionsError ? (
+            <div className="glass-card p-5 space-y-2">
+              <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
+                Time Limit
+              </p>
+              <div className="flex items-end justify-between gap-3">
+                <div>
+                  <p className={`text-3xl font-semibold ${timeExpired ? "text-red-600" : "text-[var(--warm-brown)]"}`}>
+                    {minutes}:{seconds}
+                  </p>
+                  <p className="text-sm text-[var(--warm-gray)]">
+                    {timeExpired ? "Time is up. Submit your current response." : "You have 5 minutes for this task."}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {provocateurActive && provocation && (
+              <div className="glass-card p-5 space-y-4">
+                <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
+                  Provocation
+                </p>
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <AlertTriangle className="w-4 h-4 text-[var(--peach)] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-semibold text-[var(--warm-gray)] uppercase tracking-wide mb-0.5">Risk</p>
+                      <p className="text-sm text-[var(--warm-brown)]">{provocation.risk}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <ArrowRight className="w-4 h-4 text-[var(--sage)] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-semibold text-[var(--warm-gray)] uppercase tracking-wide mb-0.5">Alternative</p>
+                      <p className="text-sm text-[var(--warm-brown)]">{provocation.alternative}</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <HelpCircle className="w-4 h-4 text-[var(--lavender)] flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-xs font-semibold text-[var(--warm-gray)] uppercase tracking-wide mb-0.5">Question</p>
+                      <p className="text-sm italic text-[var(--warm-brown)]">{provocation.question}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {hideDirections ? (
+              suggestionsError ? (
+                <div className="glass-card p-5 space-y-2">
+                  <p className="text-sm font-medium text-[var(--warm-brown)]">Could not load provocation support</p>
+                  <p className="text-sm text-[var(--warm-gray)] break-all">{suggestionsError}</p>
+                </div>
+              ) : suggestionsLoading && !provocation ? (
+                <div className="glass-card p-5 space-y-3">
+                  <p className="text-sm font-medium text-[var(--warm-brown)]">Preparing provocation...</p>
+                  <p className="text-sm text-[var(--warm-gray)]">
+                    The writing area is ready. Your provocation card will appear here as soon as it is available.
+                  </p>
+                </div>
+              ) : null
+            ) : suggestionsError ? (
               <div className="glass-card p-5 space-y-2">
                 <p className="text-sm font-medium text-[var(--warm-brown)]">Could not load suggestions</p>
                 <p className="text-sm text-[var(--warm-gray)] break-all">{suggestionsError}</p>
@@ -165,8 +264,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
                     <SuggestionCard
                       id={s.id}
                       suggestion={s.suggestion}
-                      provocateur={s.provocateur}
-                      showProvocateur={provocateurActive}
+                      showProvocateur={false}
                       selected={selected === s.id}
                       onSelect={() => setSelected(s.id)}
                     />
@@ -240,6 +338,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
                 <textarea
                   value={text}
                   onChange={(e) => setText(e.target.value)}
+                  disabled={timeExpired || saving}
                   placeholder={
                     taskType === "story"
                       ? "Write your story here..."
@@ -267,6 +366,10 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
               >
                 {saving
                   ? "Saving..."
+                  : timeExpired
+                  ? frictionActive && !gateCompleted
+                    ? "Time is up - reflect and submit"
+                    : "Time is up - submit now"
                   : frictionActive && !gateCompleted
                   ? "Reflect and submit"
                   : "Submit and continue"}
@@ -280,6 +383,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
       <FrictionGate
         visible={showGate}
         taskType={taskType}
+        requireIdeaSelection={!hideDirections}
         onComplete={handleGateComplete}
       />
     </div>
