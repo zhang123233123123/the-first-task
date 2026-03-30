@@ -11,7 +11,14 @@ const STEPS = [
   {
     icon: BookOpen,
     title: "Two creative tasks",
-    desc: "You will complete two short creative writing tasks — a story and a metaphor. Each takes about 5 minutes.",
+    desc: "You will complete two short creative tasks with AI support: one story task and one metaphor task.",
+    color: "var(--sage-light)",
+    iconColor: "var(--sage-dark)",
+  },
+  {
+    icon: CheckSquare,
+    title: "Questionnaires",
+    desc: "The study also includes background questions before the tasks and short questionnaires after each task.",
     color: "var(--sage-light)",
     iconColor: "var(--sage-dark)",
   },
@@ -60,7 +67,7 @@ export default function InstructionsPage() {
         <div className="text-center space-y-2">
           <h1 className="text-2xl font-semibold text-[var(--warm-brown)]">How this works</h1>
           <p className="text-[var(--warm-gray)] text-sm">
-            Here's what to expect before you begin.
+            Here is what to expect before you begin.
           </p>
         </div>
 
@@ -89,12 +96,12 @@ export default function InstructionsPage() {
 
         <div className="glass-card p-4 text-center">
           <p className="text-sm text-[var(--warm-gray)]">
-            First, we'll ask a few quick background questions, then the tasks begin.
+            First, you will complete the background questionnaire. After each task, you will answer a short questionnaire about your experience before continuing.
           </p>
         </div>
 
         <Button onClick={handleContinue} size="lg" className="w-full">
-          Got it — let's start
+          Got it - start the study
         </Button>
       </motion.div>
     </div>

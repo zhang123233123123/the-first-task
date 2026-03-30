@@ -85,16 +85,16 @@ function ConsentContent() {
           </h1>
           <p className="text-[var(--warm-gray)] text-base leading-relaxed max-w-lg mx-auto">
             Welcome. This study explores how people work creatively alongside AI.
-            We're glad you're here.
+            We are glad you are here.
           </p>
         </div>
 
         {/* Info cards */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { icon: Clock, label: "~20 minutes", desc: "Estimated time" },
+            { icon: Clock, label: "About 20-30 minutes", desc: "Depends on your pace" },
             { icon: Shield, label: "Anonymous", desc: "Your data is private" },
-            { icon: Users, label: "2 tasks", desc: "Short creative exercises" },
+            { icon: Users, label: "2 tasks + questionnaires", desc: "Creative exercises and study measures" },
           ].map(({ icon: Icon, label, desc }) => (
             <div key={label} className="glass-card p-4 text-center space-y-1">
               <Icon className="w-5 h-5 mx-auto text-[var(--sage)]" />
@@ -112,13 +112,16 @@ function ConsentContent() {
               This study is conducted as part of academic research on human-AI creativity. Your participation is entirely voluntary, and you may withdraw at any time without penalty.
             </p>
             <p>
-              You will complete two short creative writing tasks with AI-generated suggestions. The study involves no deception or risk beyond everyday computer use.
+              You will interact with an AI system to complete two short creative tasks and related questionnaires about your background and experience. The study involves no deception or risk beyond everyday computer use.
             </p>
             <p>
               All responses are anonymous. No personally identifying information will be collected or shared. Data will be used solely for academic research purposes.
             </p>
             <p>
               By continuing, you confirm that you are 18 years of age or older and agree to participate.
+            </p>
+            <p>
+              Please note that responses may be reviewed for data quality, completeness, and response patterns. Records showing incomplete or inattentive effort may be excluded from analysis and may not be eligible for compensation where compensation applies.
             </p>
           </div>
 
