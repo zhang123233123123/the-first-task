@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useState, useRef } from "react";
+import { use, useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
@@ -78,7 +78,11 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
   const [responses, setResponses] = useState<Record<string, number | null>>({});
   const [block, setBlock] = useState(0);
   const [loading, setLoading] = useState(false);
-  const startTime = useRef(Date.now());
+  const startTime = useRef<number | null>(null);
+
+  useEffect(() => {
+    startTime.current = Date.now();
+  }, []);
 
   const currentBlock = BLOCKS[block];
   const allAnswered = currentBlock.items.every((it) => responses[it.key] != null);
@@ -89,23 +93,24 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
       return;
     }
     setLoading(true);
-    const elapsed = (Date.now() - startTime.current) / 1000;
+    const startedAt = startTime.current ?? Date.now();
+    const elapsed = (Date.now() - startedAt) / 1000;
     if (participantId) {
       await api.savePostTask(participantId, round, responses as Record<string, unknown>, elapsed);
     }
 
     if (round === 1) {
-      await api.updateProgress(participantId!, "task/2/intro");
-      router.push("/task/2/intro");
+      await api.updateProgress(participantId!, "task/2/suggestions");
+      router.push("/task/2/suggestions");
     } else {
       await api.completeStudy(participantId!);
       router.push("/complete");
     }
   };
 
-  // Total progress steps across the whole study: 4 task pages + 7 survey blocks per round × 2
-  const TOTAL_STEPS = 18;
-  const progressStep = round === 1 ? 5 + block : 12 + block;
+  // Two task workspaces plus seven survey blocks per round.
+  const TOTAL_STEPS = 16;
+  const progressStep = round === 1 ? 2 + block : 9 + block;
 
   return (
     <div className="healing-bg min-h-screen flex items-center justify-center px-4 py-12">

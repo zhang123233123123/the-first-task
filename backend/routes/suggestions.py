@@ -15,6 +15,25 @@ import random
 router = APIRouter(prefix="/suggestions", tags=["suggestions"])
 
 
+@router.get("/prompt/{participant_id}/{task_round}")
+def get_prompt(
+    participant_id: str,
+    task_round: int,
+    db: Session = Depends(get_db),
+):
+    """Return the task prompt without generating AI suggestions yet."""
+    p = db.query(Participant).filter(Participant.participant_id == participant_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Participant not found")
+
+    task_type = p.task_order[task_round - 1]
+
+    return {
+        "task_type": task_type,
+        "prompt": _get_prompt(task_type, task_round),
+    }
+
+
 @router.get("/{participant_id}/{task_round}")
 def get_suggestions(
     participant_id: str,

@@ -53,6 +53,12 @@ export const api = {
     request(`/participants/${id}/complete`, { method: "POST" }),
 
   // ── Suggestions ─────────────────────────────────────────────
+  getTaskPrompt: (id: string, round: number) =>
+    request<{
+      task_type: string;
+      prompt: Record<string, unknown>;
+    }>(`/suggestions/prompt/${id}/${round}`),
+
   getSuggestions: (id: string, round: number) =>
     request<{
       task_type: string;
