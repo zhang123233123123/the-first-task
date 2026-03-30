@@ -7,47 +7,40 @@ import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { BookOpen, Sparkles, PenLine, CheckSquare } from "lucide-react";
 
-const STEPS = [
-  {
-    icon: BookOpen,
-    title: "Two creative tasks",
-    desc: "You will complete two short creative tasks with AI support: one story task and one metaphor task.",
-    color: "var(--sage-light)",
-    iconColor: "var(--sage-dark)",
-  },
-  {
-    icon: CheckSquare,
-    title: "Questionnaires",
-    desc: "The study also includes background questions before the tasks and short questionnaires after each task.",
-    color: "var(--sage-light)",
-    iconColor: "var(--sage-dark)",
-  },
-  {
-    icon: Sparkles,
-    title: "AI suggestions",
-    desc: "The system will show you a few AI-generated ideas at each task. You don't need to type any prompts — they appear automatically.",
-    color: "var(--lavender-light)",
-    iconColor: "var(--lavender)",
-  },
-  {
-    icon: PenLine,
-    title: "Your own voice",
-    desc: "Use the suggestions as a springboard. You decide what to keep, adapt, or ignore. The final response is always yours.",
-    color: "var(--peach-light)",
-    iconColor: "var(--peach)",
-  },
-  {
-    icon: CheckSquare,
-    title: "Short reflection steps",
-    desc: "Some steps may ask you to pause briefly before moving on. This is a normal part of the study design — just follow the prompts.",
-    color: "var(--sage-light)",
-    iconColor: "var(--sage-dark)",
-  },
-];
-
 export default function InstructionsPage() {
   const router = useRouter();
   const participantId = useStore((s) => s.participantId);
+
+  const steps = [
+    {
+      icon: BookOpen,
+      title: "Two creative tasks",
+      desc: "You will complete two short creative tasks with AI support: one story task and one metaphor task.",
+      color: "var(--sage-light)",
+      iconColor: "var(--sage-dark)",
+    },
+    {
+      icon: CheckSquare,
+      title: "Questionnaires",
+      desc: "The study also includes background questions before the tasks and short questionnaires after each task.",
+      color: "var(--sage-light)",
+      iconColor: "var(--sage-dark)",
+    },
+    {
+      icon: Sparkles,
+      title: "AI suggestions",
+      desc: "The system will show you a few AI-generated ideas at each task. You do not need to type any prompts - they appear automatically.",
+      color: "var(--lavender-light)",
+      iconColor: "var(--lavender)",
+    },
+    {
+      icon: PenLine,
+      title: "Your own voice",
+      desc: "Use the suggestions as a springboard. You decide what to keep, adapt, or ignore. The final response is always yours.",
+      color: "var(--peach-light)",
+      iconColor: "var(--peach)",
+    },
+  ];
 
   const handleContinue = async () => {
     if (participantId) {
@@ -72,7 +65,7 @@ export default function InstructionsPage() {
         </div>
 
         <div className="space-y-3">
-          {STEPS.map(({ icon: Icon, title, desc, color, iconColor }, i) => (
+          {steps.map(({ icon: Icon, title, desc, color, iconColor }, i) => (
             <motion.div
               key={title}
               initial={{ opacity: 0, x: -16 }}

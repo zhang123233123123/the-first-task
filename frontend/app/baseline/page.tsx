@@ -74,9 +74,9 @@ export default function BaselinePage() {
       const elapsed = (Date.now() - startTime.current) / 1000;
       if (participantId) {
         await api.saveBaseline(participantId, responses as Record<string, unknown>, elapsed);
-        await api.updateProgress(participantId, "task/1/suggestions");
+        await api.updateProgress(participantId, "task/1/intro");
       }
-      router.push("/task/1/suggestions");
+      router.push("/task/1/intro");
     }
   };
 
