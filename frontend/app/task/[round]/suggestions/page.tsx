@@ -12,6 +12,7 @@ import { api } from "@/lib/api";
 import { BookOpen, MessageCircle, PenLine, Send, Sparkles } from "lucide-react";
 
 const MIN_CHARS = 80;
+const FRICTION_EARLY_CHARS = 40;   // fric_first: friction gate triggers at 40 chars
 const TASK_TIME_LIMIT_SECONDS = 5 * 60;
 
 interface Suggestion {
@@ -32,6 +33,7 @@ interface SuggestionsData {
   provocation?: Provocation | null;
   provocateur_flag: boolean;
   friction_flag: boolean;
+  combined_order?: string | null;
 }
 
 export default function SuggestionsPage({ params }: { params: Promise<{ round: string }> }) {
@@ -88,6 +90,8 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   // even after page refresh.
   const provocateurActive = data?.provocateur_flag ?? false;
   const frictionActive = data?.friction_flag ?? false;
+  const combinedOrder = data?.combined_order ?? null;
+  const frictionTriggerChars = combinedOrder === "fric_first" ? FRICTION_EARLY_CHARS : MIN_CHARS;
 
   useEffect(() => {
     setCurrentRound(round);
@@ -123,29 +127,31 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const seconds = String(secondsLeft % 60).padStart(2, "0");
   const hideDirections = provocateurActive;
 
-  // Auto-reveal first provocation round after a short delay
+  // Auto-reveal first provocation round after a short delay.
+  // For fric_first, provocation only appears after the gate is completed.
   useEffect(() => {
     if (provocateurActive && provocation && aiRounds.length === 0) {
+      if (combinedOrder === "fric_first" && !gateCompleted) return;
       const t = window.setTimeout(
         () => setAiRounds([{ prov: provocation, step: 1 }]),
         300,
       );
       return () => window.clearTimeout(t);
     }
-  }, [provocateurActive, provocation, aiRounds.length]);
+  }, [provocateurActive, provocation, aiRounds.length, combinedOrder, gateCompleted]);
 
-  // Friction mid-writing trigger at 80 chars
+  // Friction mid-writing trigger: 80 chars normally, 40 chars for fric_first
   useEffect(() => {
     if (
       frictionActive &&
       !frictionTriggered &&
       !showGate &&
-      text.trim().length >= MIN_CHARS
+      text.trim().length >= frictionTriggerChars
     ) {
       setFrictionTriggered(true);
       setShowGate(true);
     }
-  }, [text, frictionActive, frictionTriggered, showGate]);
+  }, [text, frictionActive, frictionTriggered, showGate, frictionTriggerChars]);
 
   const handleSubmit = () => {
     void submitArtifact();

@@ -236,6 +236,7 @@ function isAnswered(value: ResponseValue) {
 export default function BaselinePage() {
   const router = useRouter();
   const participantId = useStore((s) => s.participantId);
+  const setParticipant = useStore((s) => s.setParticipant);
   const [responses, setResponses] = useState<Record<string, ResponseValue>>({});
   const [block, setBlock] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -271,7 +272,17 @@ export default function BaselinePage() {
     const elapsed = (Date.now() - startedAt) / 1000;
 
     if (participantId) {
-      await api.saveBaseline(participantId, responses as Record<string, unknown>, elapsed);
+      const result = await api.saveBaseline(participantId, responses as Record<string, unknown>, elapsed);
+      // Real study mode: backend returns condition assignment after CSE scoring
+      if (result.condition_id) {
+        setParticipant({
+          participantId: participantId,
+          conditionId: result.condition_id,
+          provocateurFlag: result.provocateur_flag ?? false,
+          frictionFlag: result.friction_flag ?? false,
+          taskOrder: result.task_order ?? [],
+        });
+      }
       await api.updateProgress(participantId, "task/1/brief");
     }
 

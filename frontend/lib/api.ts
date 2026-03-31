@@ -17,10 +17,10 @@ export const api = {
   initParticipant: (condition?: string) =>
     request<{
       participant_id: string;
-      condition_id: string;
+      condition_id: string | null;
       provocateur_flag: boolean;
       friction_flag: boolean;
-      task_order: string[];
+      task_order: string[] | null;
     }>("/participants/init", {
       method: "POST",
       body: JSON.stringify({ condition: condition ?? null }),
@@ -66,11 +66,19 @@ export const api = {
       suggestions: Array<Record<string, unknown>>;
       provocateur_flag: boolean;
       friction_flag: boolean;
+      combined_order?: string | null;
     }>(`/suggestions/${id}/${round}`),
 
   // ── Responses ───────────────────────────────────────────────
   saveBaseline: (participantId: string, responses: Record<string, unknown>, completionTimeSec: number) =>
-    request("/responses/baseline", {
+    request<{
+      status: string;
+      condition_id?: string;
+      provocateur_flag?: boolean;
+      friction_flag?: boolean;
+      task_order?: string[];
+      combined_order?: string | null;
+    }>("/responses/baseline", {
       method: "POST",
       body: JSON.stringify({
         participant_id: participantId,

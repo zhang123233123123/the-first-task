@@ -10,10 +10,11 @@ class Participant(Base):
     participant_id = Column(String, unique=True, index=True)
 
     # Condition assignment
-    condition_id = Column(String)       # control / provocateur / friction / prov_then_fric / fric_then_prov
+    condition_id = Column(String, nullable=True)   # provocateur / friction / prov_then_fric / fric_then_prov
     provocateur_flag = Column(Boolean, default=False)
     friction_flag = Column(Boolean, default=False)
-    task_order = Column(JSON)           # e.g. ["story", "metaphor"] or reversed
+    task_order = Column(JSON, nullable=True)        # e.g. ["story", "metaphor"] or reversed
+    stratum = Column(String, nullable=True)         # "high" | "low" — assigned after baseline
 
     # Consent
     consent_given = Column(Boolean, default=False)

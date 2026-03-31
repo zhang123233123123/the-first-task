@@ -20,13 +20,13 @@ const CONDITIONS = [
   },
   {
     id: "prov_then_fric",
-    title: "Provocation → Friction",
-    desc: "Task 1: AI challenge chat. Task 2: friction gate.",
+    title: "Prov → Fric (combined)",
+    desc: "Both tasks: provocation appears at load, friction gate triggers at 80 chars.",
   },
   {
     id: "fric_then_prov",
-    title: "Friction → Provocation",
-    desc: "Task 1: friction gate. Task 2: AI challenge chat.",
+    title: "Fric → Prov (combined)",
+    desc: "Both tasks: friction gate triggers at 40 chars, provocation reveals after gate.",
   },
 ] as const;
 

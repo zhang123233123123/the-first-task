@@ -7,6 +7,7 @@ from typing import Any
 
 from database import get_db
 from models import BaselineResponse, TaskSession, PostTaskResponse, Participant
+from services.assignment import compute_stratum, assign_condition_minimized, assign_task_order_balanced
 
 router = APIRouter(prefix="/responses", tags=["responses"])
 
@@ -44,6 +45,14 @@ class LogEventPayload(BaseModel):
     event: dict[str, Any]
 
 
+def _combined_order(condition_id: str | None) -> str | None:
+    if condition_id == "prov_then_fric":
+        return "prov_first"
+    if condition_id == "fric_then_prov":
+        return "fric_first"
+    return None
+
+
 @router.post("/baseline")
 def save_baseline(payload: BaselinePayload, db: Session = Depends(get_db)):
     existing = db.query(BaselineResponse).filter(
@@ -59,7 +68,31 @@ def save_baseline(payload: BaselinePayload, db: Session = Depends(get_db)):
             completion_time_seconds=payload.completion_time_seconds,
         ))
     db.commit()
-    return {"status": "ok"}
+
+    # Condition assignment — only if not yet assigned (real study mode)
+    p = db.query(Participant).filter(
+        Participant.participant_id == payload.participant_id
+    ).first()
+    assignment_result = {}
+    if p and p.condition_id is None:
+        stratum = compute_stratum(payload.responses)
+        condition = assign_condition_minimized(db, stratum)
+        order = assign_task_order_balanced(db, condition)
+        p.stratum = stratum
+        p.condition_id = condition
+        p.task_order = order
+        p.provocateur_flag = condition == "provocateur"
+        p.friction_flag = condition == "friction"
+        db.commit()
+        assignment_result = {
+            "condition_id": condition,
+            "provocateur_flag": p.provocateur_flag,
+            "friction_flag": p.friction_flag,
+            "task_order": order,
+            "combined_order": _combined_order(condition),
+        }
+
+    return {"status": "ok", **assignment_result}
 
 
 @router.post("/gate")

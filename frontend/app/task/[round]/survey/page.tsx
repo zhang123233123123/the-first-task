@@ -74,7 +74,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
   const round = parseInt(roundStr, 10);
 
   const router = useRouter();
-  const { participantId } = useStore();
+  const { participantId, provocateurFlag, frictionFlag } = useStore();
   const [responses, setResponses] = useState<Record<string, number | null>>({});
   const [block, setBlock] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -84,11 +84,17 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     startTime.current = Date.now();
   }, []);
 
-  const currentBlock = BLOCKS[block];
+  const activeBlocks = BLOCKS.filter((b) => {
+    if (b.id === "prov")     return provocateurFlag;
+    if (b.id === "friction") return frictionFlag;
+    return true;
+  });
+
+  const currentBlock = activeBlocks[block];
   const allAnswered = currentBlock.items.every((it) => responses[it.key] != null);
 
   const handleNext = async () => {
-    if (block < BLOCKS.length - 1) {
+    if (block < activeBlocks.length - 1) {
       setBlock((b) => b + 1);
       return;
     }
@@ -108,9 +114,12 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     }
   };
 
-  // Two task workspaces plus seven survey blocks per round.
-  const TOTAL_STEPS = 16;
-  const progressStep = round === 1 ? 2 + block : 9 + block;
+  // Two task workspaces plus N survey blocks per round (N varies by condition).
+  const TOTAL_STEPS = 2 * (1 + activeBlocks.length);
+  const progressStep =
+    round === 1
+      ? 2 + block
+      : activeBlocks.length + 3 + block;
 
   return (
     <div className="healing-bg min-h-screen flex items-center justify-center px-4 py-12">
@@ -124,7 +133,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
         <ProgressBar
           step={progressStep}
           total={TOTAL_STEPS}
-          label={`Task ${round} questionnaire — section ${block + 1} of ${BLOCKS.length}`}
+          label={`Task ${round} questionnaire — section ${block + 1} of ${activeBlocks.length}`}
         />
 
         <div className="glass-card p-7 space-y-6">
@@ -153,7 +162,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
             size="md"
             className="w-full"
           >
-            {block < BLOCKS.length - 1
+            {block < activeBlocks.length - 1
               ? "Next"
               : loading
               ? "Saving…"

@@ -10,7 +10,7 @@ from models import Participant
 
 router = APIRouter(prefix="/participants", tags=["participants"])
 
-CONDITIONS = ["control", "provocateur", "friction", "prov_then_fric", "fric_then_prov"]
+CONDITIONS = ["provocateur", "friction", "prov_then_fric", "fric_then_prov"]
 TASK_ORDERS = [["story", "metaphor"], ["metaphor", "story"]]
 
 
@@ -28,36 +28,48 @@ class InitPayload(BaseModel):
 
 @router.post("/init")
 def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends(get_db)):
-    """Create a new participant. Condition can be specified or randomly assigned."""
+    """Create a new participant.
+
+    Debug mode: condition specified → assign immediately.
+    Real mode: no condition → defer assignment until after baseline (CSE scoring).
+    """
     participant_id = str(uuid.uuid4())
 
     if payload.condition and payload.condition in CONDITIONS:
+        # Debug mode: immediate assignment
         condition = payload.condition
+        task_order = random.choice(TASK_ORDERS)
+        p = Participant(
+            participant_id=participant_id,
+            condition_id=condition,
+            provocateur_flag=condition == "provocateur",
+            friction_flag=condition == "friction",
+            task_order=task_order,
+            current_page="consent",
+        )
     else:
-        condition = random.choice(CONDITIONS)
+        # Real mode: deferred assignment after baseline
+        condition = None
+        task_order = None
+        p = Participant(
+            participant_id=participant_id,
+            condition_id=None,
+            provocateur_flag=False,
+            friction_flag=False,
+            task_order=None,
+            current_page="consent",
+        )
 
-    task_order = random.choice(TASK_ORDERS)
-
-    # Sequential conditions (prov_then_fric, fric_then_prov) have no global flags;
-    # per-round flags are computed in the suggestions route.
-    p = Participant(
-        participant_id=participant_id,
-        condition_id=condition,
-        provocateur_flag=condition == "provocateur",
-        friction_flag=condition == "friction",
-        task_order=task_order,
-        current_page="consent",
-    )
     db.add(p)
     db.commit()
     db.refresh(p)
 
     return {
         "participant_id": participant_id,
-        "condition_id": condition,
+        "condition_id": p.condition_id,
         "provocateur_flag": p.provocateur_flag,
         "friction_flag": p.friction_flag,
-        "task_order": task_order,
+        "task_order": p.task_order,
     }
 
 

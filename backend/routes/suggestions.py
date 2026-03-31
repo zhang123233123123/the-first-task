@@ -23,11 +23,17 @@ def _round_flags(condition_id: str, task_round: int) -> tuple[bool, bool]:
         return True, False
     if condition_id == "friction":
         return False, True
+    if condition_id in ("prov_then_fric", "fric_then_prov"):
+        return True, True
+    return False, False  # fallback for old/unknown conditions
+
+
+def _combined_order(condition_id: str | None) -> str | None:
     if condition_id == "prov_then_fric":
-        return (True, False) if task_round == 1 else (False, True)
+        return "prov_first"
     if condition_id == "fric_then_prov":
-        return (False, True) if task_round == 1 else (True, False)
-    return False, False  # control
+        return "fric_first"
+    return None
 
 
 @router.get("/prompt/{participant_id}/{task_round}")
@@ -41,6 +47,8 @@ def get_prompt(
     if not p:
         raise HTTPException(status_code=404, detail="Participant not found")
 
+    if not p.task_order:
+        raise HTTPException(status_code=400, detail="Task order not yet assigned")
     task_type = p.task_order[task_round - 1]
 
     return {
@@ -80,9 +88,12 @@ def get_suggestions(
             "provocation": session.provocation_shown,
             "provocateur_flag": prov_flag,
             "friction_flag": fric_flag,
+            "combined_order": _combined_order(p.condition_id),
         }
 
     # Determine task type from order
+    if not p.task_order:
+        raise HTTPException(status_code=400, detail="Task order not yet assigned")
     task_type = p.task_order[task_round - 1]
 
     # Generate suggestions
@@ -131,6 +142,7 @@ def get_suggestions(
         "provocation": provocation,
         "provocateur_flag": prov_flag,
         "friction_flag": fric_flag,
+        "combined_order": _combined_order(p.condition_id),
     }
 
 
@@ -156,7 +168,12 @@ def prov_followup(body: ProvFollowupRequest, db: Session = Depends(get_db)):
         )
         .first()
     )
-    task_type = session.task_type if session else p.task_order[body.task_round - 1]
+    if session:
+        task_type = session.task_type
+    elif p.task_order:
+        task_type = p.task_order[body.task_round - 1]
+    else:
+        raise HTTPException(status_code=400, detail="Task order not yet assigned")
 
     try:
         followup = get_followup_provocation(task_type, body.user_reply, body.original_question)
