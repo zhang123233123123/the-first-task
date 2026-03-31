@@ -47,7 +47,12 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const [gateCompleted, setGateCompleted] = useState(false);
   const [text, setText] = useState("");
   const [chatReply, setChatReply] = useState("");
-  const [chatHistory, setChatHistory] = useState<{ role: "ai" | "user"; text: string }[]>([]);
+  // Each AI provocation round has its own step counter (1=risk, 2=alt, 3=question)
+  const [aiRounds, setAiRounds] = useState<{ prov: Provocation; step: number }[]>([]);
+  // User replies, indexed to match aiRounds: replies[i] is the reply to aiRounds[i]
+  const [userReplies, setUserReplies] = useState<string[]>([]);
+  const [followupLoading, setFollowupLoading] = useState(false);
+  const [frictionTriggered, setFrictionTriggered] = useState(false);
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
   const [promptLoading, setPromptLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -118,12 +123,31 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
   const seconds = String(secondsLeft % 60).padStart(2, "0");
   const hideDirections = provocateurActive;
 
-  const handleSubmit = () => {
-    // Friction condition: must complete the reflection gate before proceeding
-    if (frictionActive && !gateCompleted) {
-      setShowGate(true);
-      return;
+  // Auto-reveal first provocation round after a short delay
+  useEffect(() => {
+    if (provocateurActive && provocation && aiRounds.length === 0) {
+      const t = window.setTimeout(
+        () => setAiRounds([{ prov: provocation, step: 1 }]),
+        300,
+      );
+      return () => window.clearTimeout(t);
     }
+  }, [provocateurActive, provocation, aiRounds.length]);
+
+  // Friction mid-writing trigger at 80 chars
+  useEffect(() => {
+    if (
+      frictionActive &&
+      !frictionTriggered &&
+      !showGate &&
+      text.trim().length >= MIN_CHARS
+    ) {
+      setFrictionTriggered(true);
+      setShowGate(true);
+    }
+  }, [text, frictionActive, frictionTriggered, showGate]);
+
+  const handleSubmit = () => {
     void submitArtifact();
   };
 
@@ -139,11 +163,27 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
     router.push(`/task/${round}/survey`);
   };
 
-  const handleChatSend = () => {
+  const handleChatSend = async () => {
     const trimmed = chatReply.trim();
-    if (!trimmed) return;
-    setChatHistory((prev) => [...prev, { role: "user", text: trimmed }]);
+    if (!trimmed || followupLoading) return;
+    const currentQuestion = aiRounds[aiRounds.length - 1]?.prov.question ?? "";
+    setUserReplies((prev) => [...prev, trimmed]);
     setChatReply("");
+    if (participantId) {
+      api.logEvent(participantId, round, { type: "prov_reply", reply: trimmed });
+    }
+    // Fetch follow-up provocation
+    if (participantId) {
+      setFollowupLoading(true);
+      try {
+        const followup = await api.getProvFollowup(participantId, round, trimmed, currentQuestion);
+        setAiRounds((prev) => [...prev, { prov: followup, step: 1 }]);
+      } catch {
+        // silently skip follow-up on error
+      } finally {
+        setFollowupLoading(false);
+      }
+    }
   };
 
   const handleGateComplete = async (gateResponses: Record<string, unknown>) => {
@@ -154,7 +194,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
       const { dwell_seconds, ...responses } = gateResponses as Record<string, unknown> & { dwell_seconds: number };
       await api.saveGate(participantId, round, responses, dwell_seconds);
     }
-    await submitArtifact();
+    // Gate is a mid-writing interrupt — return user to writing after completion
   };
   const promptUnavailable = !promptLoading && !prompt;
 
@@ -204,7 +244,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
               </div>
             </div>
 
-            {provocateurActive && provocation && (
+            {provocateurActive && provocation && aiRounds.length > 0 && (
               <div className="glass-card p-5 space-y-3 flex flex-col">
                 <div className="flex items-center gap-2">
                   <MessageCircle className="w-4 h-4 text-[var(--lavender)]" />
@@ -213,65 +253,137 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
                   </p>
                 </div>
 
-                {/* Chat history */}
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {/* Initial AI provocation message */}
-                  <div className="flex gap-2 items-start">
-                    <div className="w-6 h-6 rounded-full bg-[var(--lavender-light)] flex-shrink-0 flex items-center justify-center mt-0.5">
-                      <MessageCircle className="w-3 h-3 text-[var(--lavender)]" />
-                    </div>
-                    <div className="bg-[var(--lavender-light)]/40 rounded-2xl rounded-tl-sm px-3 py-2 text-sm text-[var(--warm-brown)] leading-relaxed max-w-[85%]">
-                      <p className="text-xs text-[var(--warm-gray)] mb-1">{provocation.risk} Consider: {provocation.alternative}</p>
-                      <p className="italic">{provocation.question}</p>
-                    </div>
-                  </div>
+                <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+                  {aiRounds.map((round_item, roundIdx) => (
+                    <div key={roundIdx} className="space-y-2">
+                      {/* Risk bubble */}
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="rounded-2xl px-3 py-2 bg-[var(--warm-gray)]/10 text-xs text-[var(--warm-brown)] leading-relaxed"
+                      >
+                        {round_item.prov.risk}
+                      </motion.div>
 
-                  {/* User replies */}
-                  {chatHistory.map((msg, i) => (
-                    <div
-                      key={i}
-                      className={`flex gap-2 items-start ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-                    >
-                      <div className="bg-[var(--sage-light)]/50 rounded-2xl rounded-tr-sm px-3 py-2 text-sm text-[var(--warm-brown)] leading-relaxed max-w-[85%]">
-                        {msg.text}
-                      </div>
+                      {/* Risk → Alternative continue */}
+                      {round_item.step === 1 && (
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAiRounds((prev) =>
+                                prev.map((r, i) => i === roundIdx ? { ...r, step: 2 } : r)
+                              )
+                            }
+                            className="text-xs text-[var(--sage)] hover:text-[var(--sage-dark)] font-medium px-2 py-1 rounded-lg transition-colors"
+                          >
+                            Continue →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Alternative bubble */}
+                      {round_item.step >= 2 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="rounded-2xl px-3 py-2 bg-[var(--sage-light)]/40 text-xs text-[var(--warm-brown)] leading-relaxed"
+                        >
+                          {round_item.prov.alternative}
+                        </motion.div>
+                      )}
+
+                      {/* Alternative → Question continue */}
+                      {round_item.step === 2 && (
+                        <div className="flex justify-end">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setAiRounds((prev) =>
+                                prev.map((r, i) => i === roundIdx ? { ...r, step: 3 } : r)
+                              )
+                            }
+                            className="text-xs text-[var(--sage)] hover:text-[var(--sage-dark)] font-medium px-2 py-1 rounded-lg transition-colors"
+                          >
+                            Continue →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Question bubble (highlighted) */}
+                      {round_item.step >= 3 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="rounded-2xl px-3 py-2.5 bg-[var(--lavender-light)]/60 border border-[var(--lavender)]/50 text-base font-medium italic text-[var(--warm-brown)] leading-relaxed"
+                        >
+                          {round_item.prov.question}
+                        </motion.div>
+                      )}
+
+                      {/* User reply for this round */}
+                      {userReplies[roundIdx] !== undefined && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.25 }}
+                          className="flex justify-end"
+                        >
+                          <div className="bg-[var(--sage-light)]/50 rounded-2xl rounded-tr-sm px-3 py-2 text-sm text-[var(--warm-brown)] leading-relaxed max-w-[85%]">
+                            {userReplies[roundIdx]}
+                          </div>
+                        </motion.div>
+                      )}
                     </div>
                   ))}
+
+                  {/* Follow-up loading indicator */}
+                  {followupLoading && (
+                    <div className="flex items-center gap-2 px-1 py-1">
+                      <div className="w-4 h-4 rounded-full border-2 border-[var(--lavender)]/40 border-t-[var(--lavender)] animate-spin" />
+                      <span className="text-xs text-[var(--warm-gray)]">Thinking…</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Reply input */}
-                <div className="flex gap-2 items-end">
-                  <textarea
-                    value={chatReply}
-                    onChange={(e) => setChatReply(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleChatSend();
-                      }
-                    }}
-                    placeholder="Reply to AI (optional)…"
-                    rows={2}
-                    className="
-                      flex-1 rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
-                      px-3 py-2 text-sm text-[var(--warm-brown)]
-                      placeholder:text-[var(--warm-gray)]/50
-                      resize-none focus:outline-none focus:ring-2 focus:ring-[var(--lavender)]/30
-                    "
-                  />
-                  <button
-                    type="button"
-                    onClick={handleChatSend}
-                    disabled={!chatReply.trim()}
-                    className="
-                      w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
-                      bg-[var(--lavender-light)] text-[var(--lavender)] transition-opacity
-                      disabled:opacity-30
-                    "
-                  >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
-                </div>
+                {/* Reply input — shown when latest round is at step 3 and not loading */}
+                {aiRounds[aiRounds.length - 1]?.step >= 3 && !followupLoading && (
+                  <div className="flex gap-2 items-end">
+                    <textarea
+                      value={chatReply}
+                      onChange={(e) => setChatReply(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          void handleChatSend();
+                        }
+                      }}
+                      placeholder="Reply to AI (optional)…"
+                      rows={2}
+                      className="
+                        flex-1 rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
+                        px-3 py-2 text-sm text-[var(--warm-brown)]
+                        placeholder:text-[var(--warm-gray)]/50
+                        resize-none focus:outline-none focus:ring-2 focus:ring-[var(--lavender)]/30
+                      "
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void handleChatSend()}
+                      disabled={!chatReply.trim()}
+                      className="
+                        w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
+                        bg-[var(--lavender-light)] text-[var(--lavender)] transition-opacity
+                        disabled:opacity-30
+                      "
+                    >
+                      <Send className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )}
               </div>
             )}
 
@@ -416,11 +528,7 @@ export default function SuggestionsPage({ params }: { params: Promise<{ round: s
                 {saving
                   ? "Saving..."
                   : timeExpired
-                  ? frictionActive && !gateCompleted
-                    ? "Time is up - reflect and submit"
-                    : "Time is up - submit now"
-                  : frictionActive && !gateCompleted
-                  ? "Reflect and submit"
+                  ? "Time is up - submit now"
                   : "Submit and continue"}
               </Button>
             </div>

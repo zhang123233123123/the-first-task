@@ -117,4 +117,20 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ participant_id: participantId, task_round: round, event }),
     }),
+
+  getProvFollowup: (
+    participantId: string,
+    round: number,
+    userReply: string,
+    originalQuestion: string,
+  ) =>
+    request<{ risk: string; alternative: string; question: string }>("/suggestions/prov-followup", {
+      method: "POST",
+      body: JSON.stringify({
+        participant_id: participantId,
+        task_round: round,
+        user_reply: userReply,
+        original_question: originalQuestion,
+      }),
+    }),
 };

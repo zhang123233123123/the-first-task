@@ -8,6 +8,7 @@ from services.deepseek import (
     get_story_suggestions,
     get_metaphor_suggestions,
     get_general_provocation,
+    get_followup_provocation,
     STORY_CUE_WORDS,
     METAPHOR_PROMPTS,
 )
@@ -131,6 +132,38 @@ def get_suggestions(
         "provocateur_flag": prov_flag,
         "friction_flag": fric_flag,
     }
+
+
+class ProvFollowupRequest(BaseModel):
+    participant_id: str
+    task_round: int
+    user_reply: str
+    original_question: str
+
+
+@router.post("/prov-followup")
+def prov_followup(body: ProvFollowupRequest, db: Session = Depends(get_db)):
+    """Generate a follow-up provocation card after the user replies."""
+    p = db.query(Participant).filter(Participant.participant_id == body.participant_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Participant not found")
+
+    session = (
+        db.query(TaskSession)
+        .filter(
+            TaskSession.participant_id == body.participant_id,
+            TaskSession.task_round == body.task_round,
+        )
+        .first()
+    )
+    task_type = session.task_type if session else p.task_order[body.task_round - 1]
+
+    try:
+        followup = get_followup_provocation(task_type, body.user_reply, body.original_question)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+
+    return followup
 
 
 def _get_prompt(task_type: str, task_round: int) -> dict:

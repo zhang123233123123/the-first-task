@@ -123,6 +123,45 @@ def get_general_provocation(task_type: str, prompt_text: str, suggestions: list[
     }
 
 
+def get_followup_provocation(task_type: str, user_reply: str, original_question: str) -> dict:
+    """Generate a follow-up provocation card based on the user's reply."""
+    system_prompt = (
+        "You are a creative critic in a research experiment. "
+        "You previously challenged a participant with a provocation question. They have replied. "
+        "Generate a new provocation card that builds on their reply and pushes their thinking further. "
+        "Be constructive, specific, and intellectually stimulating."
+    )
+
+    user_prompt = (
+        f"This participant is working on a {task_type} task.\n"
+        f"Your previous question was: {original_question}\n"
+        f"Their reply: {user_reply}\n\n"
+        "Write a follow-up provocateur card with exactly three parts:\n"
+        "- Risk: one sentence identifying a new assumption or limitation in their reply\n"
+        "- Alternative: one sentence proposing a direction they haven't yet considered\n"
+        "- Question: one deeper follow-up question that builds on what they said\n\n"
+        "Format as JSON: {\"risk\": \"...\", \"alternative\": \"...\", \"question\": \"...\"}"
+    )
+
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.8,
+    )
+
+    import json
+    data = json.loads(response.choices[0].message.content)
+    return {
+        "risk": data.get("risk", ""),
+        "alternative": data.get("alternative", ""),
+        "question": data.get("question", ""),
+    }
+
+
 def _extract_list(data) -> list:
     """Robustly extract a list from whatever JSON DeepSeek returns."""
     if isinstance(data, list):

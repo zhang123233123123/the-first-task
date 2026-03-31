@@ -97,8 +97,8 @@ export function FrictionGate({
                 <Layers className="w-5 h-5 text-[var(--lavender)]" />
               </div>
               <div>
-                <h2 className="font-semibold text-[var(--warm-brown)]">Before you continue</h2>
-                <p className="text-xs text-[var(--warm-gray)]">Take a moment to reflect on the suggestions</p>
+                <h2 className="font-semibold text-[var(--warm-brown)]">Take a moment</h2>
+                <p className="text-xs text-[var(--warm-gray)]">Before moving on, reflect on your current direction</p>
               </div>
             </div>
 
