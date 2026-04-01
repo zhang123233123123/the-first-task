@@ -9,6 +9,7 @@ from services.deepseek import (
     get_metaphor_suggestions,
     get_general_provocation,
     get_followup_provocation,
+    get_basic_ai_followup,
     STORY_CUE_WORDS,
     METAPHOR_PROMPTS,
 )
@@ -208,6 +209,49 @@ def prov_followup(body: ProvFollowupRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
 
     return followup
+
+
+class ChatRequest(BaseModel):
+    participant_id: str
+    task_round: int
+    user_message: str
+
+
+@router.post("/chat")
+def chat_followup(body: ChatRequest, db: Session = Depends(get_db)):
+    """Unified chat endpoint for all AI conditions.
+    - Provocateur / combined: returns Risk+Alternative+Question provocation.
+    - Basic AI / friction: returns a helpful suggestion reply.
+    - No AI: returns 403.
+    """
+    p = db.query(Participant).filter(Participant.participant_id == body.participant_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Participant not found")
+    if p.condition_id == "no_ai":
+        raise HTTPException(status_code=403, detail="No AI assistance in this condition")
+
+    session = (
+        db.query(TaskSession)
+        .filter(
+            TaskSession.participant_id == body.participant_id,
+            TaskSession.task_round == body.task_round,
+        )
+        .first()
+    )
+    task_type = session.task_type if session else p.task_order[body.task_round - 1]
+    task_context = _get_prompt(task_type, body.task_round).get("instruction", "")
+
+    prov_flag, _ = _round_flags(p.condition_id, body.task_round)
+
+    try:
+        if prov_flag:
+            result = get_followup_provocation(task_type, body.user_message, body.user_message)
+            return {"type": "provocation", **result}
+        else:
+            message = get_basic_ai_followup(task_type, body.user_message, task_context)
+            return {"type": "suggestion", "message": message}
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
 
 
 def _get_prompt(task_type: str, task_round: int) -> dict:

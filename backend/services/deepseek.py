@@ -23,17 +23,17 @@ METAPHOR_PROMPTS = [
 
 
 def get_story_suggestions(cue_words: list[str]) -> list[dict]:
-    """Generate 3 AI story suggestions."""
+    """Generate 1 AI story suggestion (one sentence)."""
     system_prompt = (
         "You are a creative writing assistant helping with a research experiment. "
-        "Generate creative, original story directions — not full stories, just compelling premises or directions. "
-        "Keep each suggestion under 60 words. Be specific and imaginative."
+        "Generate one creative, original story direction — not a full story, just a compelling one-sentence premise. "
+        "Be specific and imaginative."
     )
 
     user_prompt = (
-        f"Generate 3 distinct creative story directions using these three words: {', '.join(cue_words)}.\n"
-        "Each direction should be a short premise (2-3 sentences) that a writer could develop.\n"
-        "Return a JSON object: {\"suggestions\": [{\"id\": 1, \"suggestion\": \"...\"}, ...]}"
+        f"Generate exactly one creative story direction using these three words: {', '.join(cue_words)}.\n"
+        "Write a single sentence that sparks a direction a writer could develop.\n"
+        "Return a JSON object: {\"suggestions\": [{\"id\": 1, \"suggestion\": \"...\"}]}"
     )
 
     response = client.chat.completions.create(
@@ -52,16 +52,16 @@ def get_story_suggestions(cue_words: list[str]) -> list[dict]:
 
 
 def get_metaphor_suggestions(prompt: str) -> list[dict]:
-    """Generate 3 AI metaphor directions."""
+    """Generate 1 AI metaphor direction (one sentence)."""
     system_prompt = (
         "You are a creative writing assistant helping with a research experiment. "
-        "Generate creative, surprising metaphor directions — not full answers, just conceptual directions. "
+        "Generate one creative, surprising metaphor direction — a single sentence conceptual angle. "
         "Avoid clichés. Aim for semantic distance and originality."
     )
 
     user_prompt = (
         f"For this metaphor prompt: \"{prompt}\"\n"
-        "Generate 3 distinct creative directions — each a brief conceptual angle (1-2 sentences) "
+        "Generate exactly one creative direction — a single sentence conceptual angle "
         "a writer could develop into a complete metaphor.\n"
         "Format as JSON: {\"suggestions\": [{\"id\": 1, \"suggestion\": \"...\"}]}"
     )
@@ -160,6 +160,31 @@ def get_followup_provocation(task_type: str, user_reply: str, original_question:
         "alternative": data.get("alternative", ""),
         "question": data.get("question", ""),
     }
+
+
+def get_basic_ai_followup(task_type: str, user_message: str, task_context: str) -> str:
+    """Generate a helpful, supportive follow-up for basic_ai / friction conditions."""
+    system_prompt = (
+        "You are a helpful creative writing assistant in a research experiment. "
+        "Respond concisely and supportively to the participant's message. "
+        "Help them develop their creative idea — offer a brief suggestion or encouragement. "
+        "Keep your response under 80 words."
+    )
+    user_prompt = (
+        f"The participant is working on a {task_type} creative writing task.\n"
+        f"Task context: {task_context}\n\n"
+        f"Their message: {user_message}\n\n"
+        "Give a short, helpful response with a creative suggestion they can use."
+    )
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        temperature=0.8,
+    )
+    return response.choices[0].message.content.strip()
 
 
 def _extract_list(data) -> list:

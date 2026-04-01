@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChatBubble } from "@/components/ChatBubble";
@@ -19,9 +19,7 @@ const TASK_TIME_LIMIT_SECONDS = 5 * 60;
 
 type MsgType =
   | "suggestion"
-  | "prov_risk"
-  | "prov_alt"
-  | "prov_question"
+  | "provocation"
   | "user_reply"
   | "friction_card"
   | "friction_done";
@@ -31,10 +29,9 @@ interface ChatMessage {
   type: MsgType;
   role: "ai" | "user";
   content: string;
-  provRoundIndex?: number;
   frictionDone?: boolean;
-  /** prov_risk / prov_alt: show "Continue →" to reveal next step */
-  pendingReveal?: boolean;
+  /** Structured provocation content for "provocation" messages */
+  provocation?: { risk: string; alternative: string; question: string };
 }
 
 interface Suggestion {
@@ -89,12 +86,9 @@ export default function SuggestionsPage({
 
   const [secondsLeft, setSecondsLeft] = useState(TASK_TIME_LIMIT_SECONDS);
   const [timeExpired, setTimeExpired] = useState(false);
-  const [highlightedId, setHighlightedId] = useState<string | undefined>();
 
   const startTime = useRef<number | null>(null);
   const chatScrollRef = useRef<HTMLDivElement>(null);
-  // Store full Provocation objects by round index so we can reveal alt/question on demand
-  const provRoundsRef = useRef<Map<number, Provocation>>(new Map());
 
   // ── Init ──────────────────────────────────────────────────
 
@@ -177,17 +171,15 @@ export default function SuggestionsPage({
       }));
       setMessages(suggMessages);
     } else {
-      // provocateur / combined → start prov flow (unless fric_first: wait for gate)
+      // provocateur / combined → single combined provocation message (unless fric_first: wait for gate)
       if (data.combined_order !== "fric_first" && data.provocation) {
-        provRoundsRef.current.set(0, data.provocation);
         setMessages([
           {
-            id: "prov_risk-0",
-            type: "prov_risk",
+            id: "provocation-0",
+            type: "provocation",
             role: "ai",
-            content: data.provocation.risk,
-            provRoundIndex: 0,
-            pendingReveal: true,
+            content: "",
+            provocation: data.provocation,
           },
         ]);
       }
@@ -230,73 +222,23 @@ export default function SuggestionsPage({
   const frictionBlocking = messages.some(
     (m) => m.type === "friction_card" && !m.frictionDone
   );
-  const showReplyInput =
-    messages[messages.length - 1]?.type === "prov_question" &&
-    !followupLoading;
-  const canSubmit = !saving && (text.trim().length >= MIN_CHARS || timeExpired);
-  const promptUnavailable = !promptLoading && !prompt;
-
   const noAiMode =
     messagesInitialized &&
     !provocateurActive &&
     !frictionActive &&
     (data?.suggestions?.length ?? 0) === 0;
+  const showChatInput = !noAiMode && !saving;
+  const canSubmit = !saving && (text.trim().length >= MIN_CHARS || timeExpired);
+  const promptUnavailable = !promptLoading && !prompt;
 
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const seconds = String(secondsLeft % 60).padStart(2, "0");
 
   // ── Handlers ──────────────────────────────────────────────
 
-  const handleRevealNext = (msgId: string) => {
-    setMessages((prev) => {
-      const msgIdx = prev.findIndex((m) => m.id === msgId);
-      if (msgIdx === -1) return prev;
-      const msg = prev[msgIdx];
-      const roundIdx = msg.provRoundIndex ?? 0;
-      const prov = provRoundsRef.current.get(roundIdx);
-      if (!prov) return prev;
-
-      const updated = prev.map((m) =>
-        m.id === msgId ? { ...m, pendingReveal: false } : m
-      );
-
-      if (msg.type === "prov_risk") {
-        return [
-          ...updated,
-          {
-            id: `prov_alt-${roundIdx}-${Date.now()}`,
-            type: "prov_alt" as MsgType,
-            role: "ai" as const,
-            content: prov.alternative,
-            provRoundIndex: roundIdx,
-            pendingReveal: true,
-          },
-        ];
-      }
-      if (msg.type === "prov_alt") {
-        return [
-          ...updated,
-          {
-            id: `prov_question-${roundIdx}-${Date.now()}`,
-            type: "prov_question" as MsgType,
-            role: "ai" as const,
-            content: prov.question,
-            provRoundIndex: roundIdx,
-          },
-        ];
-      }
-      return prev;
-    });
-  };
-
-  const handleChatSend = async () => {
-    const trimmed = chatReply.trim();
+  const handleChatSend = async (draft?: string) => {
+    const trimmed = (draft ?? chatReply).trim();
     if (!trimmed || followupLoading) return;
-
-    const lastQuestion = [...messages]
-      .reverse()
-      .find((m) => m.type === "prov_question");
-    const originalQuestion = lastQuestion?.content ?? "";
 
     const replyMsg: ChatMessage = {
       id: `user_reply-${Date.now()}`,
@@ -308,40 +250,49 @@ export default function SuggestionsPage({
     setChatReply("");
 
     if (participantId) {
-      api.logEvent(participantId, round, {
-        type: "prov_reply",
-        reply: trimmed,
-      });
+      api.logEvent(participantId, round, { type: "chat_reply", reply: trimmed });
     }
 
     if (participantId) {
       setFollowupLoading(true);
       try {
-        const followup = await api.getProvFollowup(
-          participantId,
-          round,
-          trimmed,
-          originalQuestion
-        );
-        const nextRoundIdx = provRoundsRef.current.size;
-        provRoundsRef.current.set(nextRoundIdx, followup);
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `prov_risk-${nextRoundIdx}-${Date.now()}`,
-            type: "prov_risk",
-            role: "ai",
-            content: followup.risk,
-            provRoundIndex: nextRoundIdx,
-            pendingReveal: true,
-          },
-        ]);
+        const response = await api.chatFollowup(participantId, round, trimmed);
+        if (response.type === "provocation") {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `provocation-${Date.now()}`,
+              type: "provocation",
+              role: "ai",
+              content: "",
+              provocation: { risk: response.risk, alternative: response.alternative, question: response.question },
+            },
+          ]);
+        } else {
+          setMessages((prev) => [
+            ...prev,
+            {
+              id: `suggestion-reply-${Date.now()}`,
+              type: "suggestion",
+              role: "ai",
+              content: response.message,
+            },
+          ]);
+        }
       } catch {
-        // silently skip follow-up on error
+        // silently skip on error
       } finally {
         setFollowupLoading(false);
       }
     }
+  };
+
+  const handleChatKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter" || e.shiftKey || e.nativeEvent.isComposing) {
+      return;
+    }
+    e.preventDefault();
+    void handleChatSend(e.currentTarget.value);
   };
 
   const handleFrictionComplete = async (
@@ -370,17 +321,14 @@ export default function SuggestionsPage({
 
     // fric_first: start provocation after friction completes
     if (combinedOrder === "fric_first" && provocation) {
-      const nextRoundIdx = provRoundsRef.current.size;
-      provRoundsRef.current.set(nextRoundIdx, provocation);
       setMessages((prev) => [
         ...prev,
         {
-          id: `prov_risk-${nextRoundIdx}-${Date.now()}`,
-          type: "prov_risk",
+          id: `provocation-${Date.now()}`,
+          type: "provocation",
           role: "ai",
-          content: provocation.risk,
-          provRoundIndex: nextRoundIdx,
-          pendingReveal: true,
+          content: "",
+          provocation: provocation,
         },
       ]);
     }
@@ -427,44 +375,36 @@ export default function SuggestionsPage({
       );
     }
 
-    if (msg.type === "prov_question") {
+    if (msg.type === "provocation" && msg.provocation) {
       return (
-        <div key={msg.id}>
-          <ChatBubble
-            role="ai"
-            id={msg.id}
-            highlight={highlightedId === msg.id}
-          >
-            <span className="font-medium italic">{msg.content}</span>
+        <div key={msg.id} id={msg.id}>
+          <ChatBubble role="ai">
+            <div className="space-y-2 text-sm leading-relaxed">
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--peach)] block mb-0.5">Risk</span>
+                <span>{msg.provocation.risk}</span>
+              </div>
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--sage-dark)] block mb-0.5">Alternative</span>
+                <span>{msg.provocation.alternative}</span>
+              </div>
+              <div>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--lavender)] block mb-0.5">Question</span>
+                <span className="italic">{msg.provocation.question}</span>
+              </div>
+            </div>
           </ChatBubble>
         </div>
       );
     }
 
-    const bubbleContent = (
-      <ChatBubble role={msg.role} id={msg.id} highlight={highlightedId === msg.id}>
-        <span>{msg.content}</span>
-      </ChatBubble>
+    return (
+      <div key={msg.id}>
+        <ChatBubble role={msg.role} id={msg.id}>
+          <span>{msg.content}</span>
+        </ChatBubble>
+      </div>
     );
-
-    if (msg.pendingReveal && (msg.type === "prov_risk" || msg.type === "prov_alt")) {
-      return (
-        <div key={msg.id} className="space-y-1">
-          {bubbleContent}
-          <div className="flex justify-end">
-            <button
-              type="button"
-              onClick={() => handleRevealNext(msg.id)}
-              className="text-xs text-[var(--sage)] hover:text-[var(--sage-dark)] font-medium px-2 py-1 rounded-lg transition-colors"
-            >
-              Continue →
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    return <div key={msg.id}>{bubbleContent}</div>;
   };
 
   // ── Render ────────────────────────────────────────────────
@@ -475,7 +415,7 @@ export default function SuggestionsPage({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
-        className="flex-1 flex flex-col gap-4 w-full max-w-[1400px] mx-auto"
+        className="flex-1 flex min-h-0 flex-col gap-4 w-full max-w-[1400px] mx-auto"
       >
         <ProgressBar
           step={round === 1 ? 1 : 8}
@@ -483,14 +423,14 @@ export default function SuggestionsPage({
           label={`Task ${round} workspace`}
         />
 
-        {/* Two-column grid: stacks on narrow screens, 2-col on lg+ */}
-        <div className="flex-1 grid gap-4 grid-cols-1 lg:grid-cols-[320px_1fr] lg:h-[calc(100vh-130px)]">
+        {/* Two-column grid: AI panel (60%) > writing area (40%) */}
+        <div className="flex-1 min-h-0 grid gap-4 grid-cols-1 lg:grid-cols-[3fr_2fr] lg:h-[calc(100vh-130px)]">
 
           {/* ── Left: AI Panel + Timer ── */}
-          <div className="flex flex-col gap-4">
+          <div className="flex min-h-0 flex-col gap-4">
 
             {/* AI content card */}
-            <aside className="glass-card flex flex-col flex-1 overflow-hidden" style={{ minHeight: "240px" }}>
+            <aside className="glass-card flex h-[28rem] min-h-0 flex-col overflow-hidden lg:h-auto lg:flex-1">
               <div className="px-4 pt-4 pb-2 border-b border-[var(--sage-light)]/20 flex-shrink-0">
                 <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
                   {provocateurActive ? "AI Challenge" : noAiMode ? "No AI" : "AI Suggestions"}
@@ -499,14 +439,14 @@ export default function SuggestionsPage({
 
               <div
                 ref={chatScrollRef}
-                className="flex-1 overflow-y-auto p-4 space-y-3"
+                className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3"
               >
                 {noAiMode ? (
-                  <p className="text-sm text-[var(--warm-gray)] text-center pt-4 leading-relaxed">
-                    No AI assistance in this condition.
-                    <br />
-                    Write freely in the area to the right.
-                  </p>
+                  <div className="flex flex-col items-center justify-center h-full pt-8 gap-3">
+                    <p className="text-2xl font-bold tracking-widest text-[var(--warm-gray)]/40 uppercase select-none">
+                      NO AI
+                    </p>
+                  </div>
                 ) : suggestionsLoading && !messagesInitialized ? (
                   <div className="flex flex-col items-center gap-2 pt-6">
                     <div className="w-5 h-5 rounded-full border-2 border-[var(--sage-light)]/40 border-t-[var(--sage)] animate-spin" />
@@ -528,18 +468,13 @@ export default function SuggestionsPage({
                 )}
               </div>
 
-              {/* Reply input — only visible for provocateur, but card structure is always present */}
-              {showReplyInput && (
+              {/* Chat input — visible for all conditions except no_ai */}
+              {showChatInput && (
                 <div className="flex gap-2 items-end p-3 border-t border-[var(--sage-light)]/20 flex-shrink-0">
                   <textarea
                     value={chatReply}
                     onChange={(e) => setChatReply(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        void handleChatSend();
-                      }
-                    }}
+                    onKeyDown={handleChatKeyDown}
                     placeholder="Reply to AI (optional)…"
                     rows={2}
                     className="
@@ -551,8 +486,8 @@ export default function SuggestionsPage({
                   />
                   <button
                     type="button"
-                    onClick={() => void handleChatSend()}
-                    disabled={!chatReply.trim()}
+                    onClick={() => void handleChatSend(chatReply)}
+                    disabled={!chatReply.trim() || followupLoading}
                     className="
                       w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
                       bg-[var(--lavender-light)] text-[var(--lavender)] transition-opacity
@@ -584,7 +519,7 @@ export default function SuggestionsPage({
           </div>
 
           {/* ── Right: Writing Area ── */}
-          <section className="flex flex-col gap-4 lg:h-full overflow-hidden">
+          <section className="flex min-h-0 flex-col gap-4 overflow-hidden lg:h-full">
             {/* Task prompt card */}
             <div className="glass-card p-5 space-y-3 flex-shrink-0">
               <div className="flex items-center gap-2">

@@ -8,11 +8,11 @@ import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { Leaf, Clock, Shield, Users } from "lucide-react";
 
-const VALID_CONDITIONS = ["control", "provocateur", "friction", "prov_then_fric", "fric_then_prov"] as const;
+const VALID_CONDITIONS = ["no_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"] as const;
 type Condition = typeof VALID_CONDITIONS[number];
 
 const CONDITION_LABELS: Record<Condition, string> = {
-  control:        "Standard",
+  no_ai:          "Control (No AI)",
   provocateur:    "Challenge mode",
   friction:       "Reflection mode",
   prov_then_fric: "Challenge then Reflection",
@@ -35,7 +35,7 @@ function ConsentContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Read condition from URL — e.g. /consent?condition=friction
+  // Read condition from URL — e.g. /consent?condition=no_ai
   const rawCondition = searchParams.get("condition");
   const condition = VALID_CONDITIONS.includes(rawCondition as Condition)
     ? (rawCondition as Condition)

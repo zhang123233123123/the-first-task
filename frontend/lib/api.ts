@@ -126,6 +126,19 @@ export const api = {
       body: JSON.stringify({ participant_id: participantId, task_round: round, event }),
     }),
 
+  chatFollowup: (participantId: string, round: number, userMessage: string) =>
+    request<
+      | { type: "suggestion"; message: string }
+      | { type: "provocation"; risk: string; alternative: string; question: string }
+    >("/suggestions/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        participant_id: participantId,
+        task_round: round,
+        user_message: userMessage,
+      }),
+    }),
+
   getProvFollowup: (
     participantId: string,
     round: number,
