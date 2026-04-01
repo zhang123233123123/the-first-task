@@ -4,8 +4,6 @@ import { use, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChatBubble } from "@/components/ChatBubble";
-import { GitLogPanel } from "@/components/GitLogPanel";
-import type { GitLogEntry } from "@/components/GitLogPanel";
 import { InlineFrictionCard } from "@/components/InlineFrictionCard";
 import { Button } from "@/components/ui/Button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -247,28 +245,6 @@ export default function SuggestionsPage({
   const minutes = String(Math.floor(secondsLeft / 60)).padStart(2, "0");
   const seconds = String(secondsLeft % 60).padStart(2, "0");
 
-  // ── Git log entries (derived from messages) ───────────────
-
-  const gitLogEntries: GitLogEntry[] = messages
-    .filter((m) =>
-      ["suggestion", "prov_risk", "friction_card"].includes(m.type)
-    )
-    .map((m, i) => ({
-      id: m.id,
-      label:
-        m.type === "suggestion"
-          ? `Suggestion #${i + 1}: ${m.content.slice(0, 28)}…`
-          : m.type === "prov_risk"
-          ? `AI Challenge ${(m.provRoundIndex ?? 0) + 1}`
-          : "Reflection pause",
-      type:
-        m.type === "suggestion"
-          ? "suggestion"
-          : m.type === "friction_card"
-          ? "friction"
-          : "provocation",
-    }));
-
   // ── Handlers ──────────────────────────────────────────────
 
   const handleRevealNext = (msgId: string) => {
@@ -425,15 +401,6 @@ export default function SuggestionsPage({
     router.push(`/task/${round}/survey`);
   };
 
-  const scrollToMessage = (id: string) => {
-    setHighlightedId(id);
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "center" });
-    }
-    setTimeout(() => setHighlightedId(undefined), 1500);
-  };
-
   // ── Render a single chat message ─────────────────────────
 
   const renderMessage = (msg: ChatMessage) => {
@@ -503,12 +470,12 @@ export default function SuggestionsPage({
   // ── Render ────────────────────────────────────────────────
 
   return (
-    <div className="healing-bg min-h-screen flex items-center justify-center px-4 py-8">
+    <div className="healing-bg min-h-screen flex flex-col px-4 py-6 gap-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
-        className="w-full max-w-[1400px] space-y-4"
+        className="flex-1 flex flex-col gap-4 w-full max-w-[1400px] mx-auto"
       >
         <ProgressBar
           step={round === 1 ? 1 : 8}
@@ -516,102 +483,108 @@ export default function SuggestionsPage({
           label={`Task ${round} workspace`}
         />
 
-        {/* Three-column grid: stacks on narrow screens, 3-col on xl+ */}
-        <div className="grid gap-4 grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)_220px] xl:h-[calc(100vh-140px)] xl:min-h-[560px]">
-          {/* ── Left: AI Chat ── */}
-          <aside className="glass-card flex flex-col xl:h-full overflow-hidden" style={{ minHeight: "320px" }}>
-            {/* Header */}
-            <div className="px-4 pt-4 pb-2 border-b border-[var(--sage-light)]/20 flex-shrink-0">
-              <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
-                {provocateurActive ? "AI Challenge" : noAiMode ? "No AI" : "AI Suggestions"}
-              </p>
-              {/* Timer badge */}
-              <div className="mt-1 flex items-baseline gap-1">
-                <span
-                  className={`text-xl font-semibold ${
-                    timeExpired ? "text-red-600" : "text-[var(--warm-brown)]"
-                  }`}
-                >
-                  {minutes}:{seconds}
-                </span>
-                <span className="text-xs text-[var(--warm-gray)]">
-                  {timeExpired ? "time up" : "remaining"}
-                </span>
-              </div>
-            </div>
+        {/* Two-column grid: stacks on narrow screens, 2-col on lg+ */}
+        <div className="flex-1 grid gap-4 grid-cols-1 lg:grid-cols-[320px_1fr] lg:h-[calc(100vh-130px)]">
 
-            {/* Message list */}
-            <div
-              ref={chatScrollRef}
-              className="flex-1 overflow-y-auto p-4 space-y-3"
-            >
-              {noAiMode ? (
-                <p className="text-sm text-[var(--warm-gray)] text-center pt-4 leading-relaxed">
-                  No AI assistance in this condition.
-                  <br />
-                  Write freely in the area to the right.
+          {/* ── Left: AI Panel + Timer ── */}
+          <div className="flex flex-col gap-4">
+
+            {/* AI content card */}
+            <aside className="glass-card flex flex-col flex-1 overflow-hidden" style={{ minHeight: "240px" }}>
+              <div className="px-4 pt-4 pb-2 border-b border-[var(--sage-light)]/20 flex-shrink-0">
+                <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
+                  {provocateurActive ? "AI Challenge" : noAiMode ? "No AI" : "AI Suggestions"}
                 </p>
-              ) : suggestionsLoading && !messagesInitialized ? (
-                <div className="flex flex-col items-center gap-2 pt-6">
-                  <div className="w-5 h-5 rounded-full border-2 border-[var(--sage-light)]/40 border-t-[var(--sage)] animate-spin" />
-                  <p className="text-xs text-[var(--warm-gray)]">
-                    {provocateurActive ? "Preparing challenge…" : "Generating suggestions…"}
-                  </p>
-                </div>
-              ) : suggestionsError ? (
-                <p className="text-xs text-red-500 break-all">{suggestionsError}</p>
-              ) : (
-                messages.map((msg) => renderMessage(msg))
-              )}
-
-              {/* Follow-up loading */}
-              {followupLoading && (
-                <div className="flex items-center gap-2 px-1 py-1">
-                  <div className="w-4 h-4 rounded-full border-2 border-[var(--lavender)]/40 border-t-[var(--lavender)] animate-spin" />
-                  <span className="text-xs text-[var(--warm-gray)]">Thinking…</span>
-                </div>
-              )}
-            </div>
-
-            {/* Reply input for provocateur */}
-            {showReplyInput && (
-              <div className="flex gap-2 items-end p-3 border-t border-[var(--sage-light)]/20 flex-shrink-0">
-                <textarea
-                  value={chatReply}
-                  onChange={(e) => setChatReply(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      void handleChatSend();
-                    }
-                  }}
-                  placeholder="Reply to AI (optional)…"
-                  rows={2}
-                  className="
-                    flex-1 rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
-                    px-3 py-2 text-sm text-[var(--warm-brown)]
-                    placeholder:text-[var(--warm-gray)]/50
-                    resize-none focus:outline-none focus:ring-2 focus:ring-[var(--lavender)]/30
-                  "
-                />
-                <button
-                  type="button"
-                  onClick={() => void handleChatSend()}
-                  disabled={!chatReply.trim()}
-                  className="
-                    w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
-                    bg-[var(--lavender-light)] text-[var(--lavender)] transition-opacity
-                    disabled:opacity-30
-                  "
-                >
-                  <Send className="w-3.5 h-3.5" />
-                </button>
               </div>
-            )}
-          </aside>
 
-          {/* ── Center: Writing area ── */}
-          <section className="flex flex-col gap-4 xl:h-full overflow-hidden">
+              <div
+                ref={chatScrollRef}
+                className="flex-1 overflow-y-auto p-4 space-y-3"
+              >
+                {noAiMode ? (
+                  <p className="text-sm text-[var(--warm-gray)] text-center pt-4 leading-relaxed">
+                    No AI assistance in this condition.
+                    <br />
+                    Write freely in the area to the right.
+                  </p>
+                ) : suggestionsLoading && !messagesInitialized ? (
+                  <div className="flex flex-col items-center gap-2 pt-6">
+                    <div className="w-5 h-5 rounded-full border-2 border-[var(--sage-light)]/40 border-t-[var(--sage)] animate-spin" />
+                    <p className="text-xs text-[var(--warm-gray)]">
+                      {provocateurActive ? "Preparing challenge…" : "Generating suggestions…"}
+                    </p>
+                  </div>
+                ) : suggestionsError ? (
+                  <p className="text-xs text-red-500 break-all">{suggestionsError}</p>
+                ) : (
+                  messages.map((msg) => renderMessage(msg))
+                )}
+
+                {followupLoading && (
+                  <div className="flex items-center gap-2 px-1 py-1">
+                    <div className="w-4 h-4 rounded-full border-2 border-[var(--lavender)]/40 border-t-[var(--lavender)] animate-spin" />
+                    <span className="text-xs text-[var(--warm-gray)]">Thinking…</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Reply input — only visible for provocateur, but card structure is always present */}
+              {showReplyInput && (
+                <div className="flex gap-2 items-end p-3 border-t border-[var(--sage-light)]/20 flex-shrink-0">
+                  <textarea
+                    value={chatReply}
+                    onChange={(e) => setChatReply(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        void handleChatSend();
+                      }
+                    }}
+                    placeholder="Reply to AI (optional)…"
+                    rows={2}
+                    className="
+                      flex-1 rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
+                      px-3 py-2 text-sm text-[var(--warm-brown)]
+                      placeholder:text-[var(--warm-gray)]/50
+                      resize-none focus:outline-none focus:ring-2 focus:ring-[var(--lavender)]/30
+                    "
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleChatSend()}
+                    disabled={!chatReply.trim()}
+                    className="
+                      w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0
+                      bg-[var(--lavender-light)] text-[var(--lavender)] transition-opacity
+                      disabled:opacity-30
+                    "
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </aside>
+
+            {/* Timer card */}
+            <div className="glass-card p-5 flex-shrink-0">
+              <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide mb-2">
+                Time Limit
+              </p>
+              <p
+                className={`text-4xl font-bold tabular-nums tracking-tight ${
+                  timeExpired ? "text-red-600" : "text-[var(--warm-brown)]"
+                }`}
+              >
+                {minutes}:{seconds}
+              </p>
+              <p className="text-xs text-[var(--warm-gray)] mt-1">
+                {timeExpired ? "Time is up. Submit your current response." : "remaining"}
+              </p>
+            </div>
+          </div>
+
+          {/* ── Right: Writing Area ── */}
+          <section className="flex flex-col gap-4 lg:h-full overflow-hidden">
             {/* Task prompt card */}
             <div className="glass-card p-5 space-y-3 flex-shrink-0">
               <div className="flex items-center gap-2">
@@ -620,6 +593,7 @@ export default function SuggestionsPage({
                   <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
                     {taskType === "story" ? "Short Story Task" : "Creative Metaphor Task"}
                   </p>
+                  <p className="text-sm font-semibold text-[var(--warm-brown)]">Task prompt</p>
                 </div>
               </div>
               {promptError ? (
@@ -667,7 +641,7 @@ export default function SuggestionsPage({
 
               {frictionBlocking && (
                 <p className="text-xs text-[var(--lavender)] bg-[var(--lavender-light)]/20 rounded-xl px-3 py-2 flex-shrink-0">
-                  Complete the reflection in the chat panel to continue writing.
+                  Complete the reflection in the left panel to continue writing.
                 </p>
               )}
 
@@ -682,7 +656,7 @@ export default function SuggestionsPage({
                       : "Write your metaphor response here…"
                   }
                   className="
-                    flex-1 w-full rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
+                    flex-1 w-full rounded-2xl bg-white/80 border border-[var(--sage-light)]/40
                     px-5 py-4 text-sm text-[var(--warm-brown)] leading-relaxed
                     placeholder:text-[var(--warm-gray)]/50
                     resize-none focus:outline-none focus:ring-2 focus:ring-[var(--sage)]/40
@@ -710,12 +684,6 @@ export default function SuggestionsPage({
             </div>
           </section>
 
-          {/* ── Right: Git log ── */}
-          <GitLogPanel
-            entries={gitLogEntries}
-            activeId={highlightedId}
-            onSelect={scrollToMessage}
-          />
         </div>
       </motion.div>
     </div>

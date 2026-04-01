@@ -1,3 +1,5 @@
+import random
+
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.orm.attributes import flag_modified
@@ -7,7 +9,9 @@ from typing import Any
 
 from database import get_db
 from models import BaselineResponse, TaskSession, PostTaskResponse, Participant
-from services.assignment import compute_stratum, assign_condition_minimized, assign_task_order_balanced
+from services.assignment import assign_task_order_balanced
+
+CONDITIONS = ["no_ai", "basic_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"]
 
 router = APIRouter(prefix="/responses", tags=["responses"])
 
@@ -75,14 +79,12 @@ def save_baseline(payload: BaselinePayload, db: Session = Depends(get_db)):
     ).first()
     assignment_result = {}
     if p and p.condition_id is None:
-        stratum = compute_stratum(payload.responses)
-        condition = assign_condition_minimized(db, stratum)
+        condition = random.choice(CONDITIONS)
         order = assign_task_order_balanced(db, condition)
-        p.stratum = stratum
         p.condition_id = condition
         p.task_order = order
-        p.provocateur_flag = condition == "provocateur"
-        p.friction_flag = condition == "friction"
+        p.provocateur_flag = condition in ("provocateur", "prov_then_fric", "fric_then_prov")
+        p.friction_flag = condition in ("friction", "prov_then_fric", "fric_then_prov")
         db.commit()
         assignment_result = {
             "condition_id": condition,
