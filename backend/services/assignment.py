@@ -4,7 +4,7 @@ from sqlalchemy import func
 from models import Participant
 
 CSE_THRESHOLD = 3.5   # 1-5 scale; >= 3.5 → high stratum
-CONDITIONS = ["provocateur", "friction", "prov_then_fric", "fric_then_prov"]
+CONDITIONS = ["no_ai", "basic_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"]
 TASK_ORDERS = [["story", "metaphor"], ["metaphor", "story"]]
 
 

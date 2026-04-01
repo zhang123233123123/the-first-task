@@ -9,24 +9,34 @@ import { api } from "@/lib/api";
 
 const CONDITIONS = [
   {
+    id: "no_ai",
+    title: "No AI",
+    desc: "Control condition. No AI suggestions or interventions. Writing area only.",
+  },
+  {
+    id: "basic_ai",
+    title: "Basic AI",
+    desc: "AI suggestions shown as chat bubbles. No friction reflection or challenge.",
+  },
+  {
     id: "provocateur",
     title: "Provocateur only",
-    desc: "AI challenge chat panel shown during writing. No friction gate.",
+    desc: "AI challenge chat panel with risk → alternative → question flow. No friction.",
   },
   {
     id: "friction",
     title: "Friction only",
-    desc: "Reflection gate pop-up required before submission. No challenge chat.",
+    desc: "AI suggestions shown; inline reflection card appears at 80 chars. No challenge.",
   },
   {
     id: "prov_then_fric",
     title: "Prov → Fric (combined)",
-    desc: "Both tasks: provocation appears at load, friction gate triggers at 80 chars.",
+    desc: "Provocation appears at load; inline friction card triggers at 80 chars.",
   },
   {
     id: "fric_then_prov",
     title: "Fric → Prov (combined)",
-    desc: "Both tasks: friction gate triggers at 40 chars, provocation reveals after gate.",
+    desc: "Friction card triggers at 40 chars; provocation starts after reflection done.",
   },
 ] as const;
 

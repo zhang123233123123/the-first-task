@@ -10,7 +10,7 @@ from models import Participant
 
 router = APIRouter(prefix="/participants", tags=["participants"])
 
-CONDITIONS = ["provocateur", "friction", "prov_then_fric", "fric_then_prov"]
+CONDITIONS = ["no_ai", "basic_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"]
 TASK_ORDERS = [["story", "metaphor"], ["metaphor", "story"]]
 
 
@@ -39,11 +39,13 @@ def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends
         # Debug mode: immediate assignment
         condition = payload.condition
         task_order = random.choice(TASK_ORDERS)
+        provocateur_flag = condition in ("provocateur", "prov_then_fric", "fric_then_prov")
+        friction_flag = condition in ("friction", "prov_then_fric", "fric_then_prov")
         p = Participant(
             participant_id=participant_id,
             condition_id=condition,
-            provocateur_flag=condition == "provocateur",
-            friction_flag=condition == "friction",
+            provocateur_flag=provocateur_flag,
+            friction_flag=friction_flag,
             task_order=task_order,
             current_page="consent",
         )

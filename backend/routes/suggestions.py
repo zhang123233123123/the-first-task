@@ -19,6 +19,10 @@ router = APIRouter(prefix="/suggestions", tags=["suggestions"])
 
 def _round_flags(condition_id: str, task_round: int) -> tuple[bool, bool]:
     """Return (provocateur_flag, friction_flag) for this specific round."""
+    if condition_id == "no_ai":
+        return False, False
+    if condition_id == "basic_ai":
+        return False, False
     if condition_id == "provocateur":
         return True, False
     if condition_id == "friction":
@@ -95,6 +99,29 @@ def get_suggestions(
     if not p.task_order:
         raise HTTPException(status_code=400, detail="Task order not yet assigned")
     task_type = p.task_order[task_round - 1]
+
+    # no_ai: return empty suggestions without calling AI
+    if p.condition_id == "no_ai":
+        display_prompt = _get_prompt(task_type, task_round)
+        if not session:
+            session = TaskSession(
+                participant_id=participant_id,
+                task_round=task_round,
+                task_type=task_type,
+            )
+            db.add(session)
+        session.suggestions_shown = []
+        session.provocation_shown = None
+        db.commit()
+        return {
+            "task_type": task_type,
+            "prompt": display_prompt,
+            "suggestions": [],
+            "provocation": None,
+            "provocateur_flag": False,
+            "friction_flag": False,
+            "combined_order": None,
+        }
 
     # Generate suggestions
     try:
