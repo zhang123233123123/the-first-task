@@ -155,9 +155,8 @@ const BLOCKS: Block[] = [
         label: "What is your gender?",
         type: "select",
         options: [
-          "Woman",
-          "Man",
-          "Prefer not to say",
+          "Female",
+          "Male",
         ],
       },
       {
