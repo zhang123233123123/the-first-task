@@ -12,7 +12,7 @@ import { api } from "@/lib/api";
 import { BookOpen, PenLine, Send } from "lucide-react";
 
 const MIN_CHARS = 80;
-const FRICTION_EARLY_CHARS = 40;
+const FRICTION_TRIGGER_CHARS = 40;
 const TASK_TIME_LIMIT_SECONDS = 5 * 60;
 
 // ── Types ────────────────────────────────────────────────────
@@ -144,8 +144,6 @@ export default function SuggestionsPage({
   const provocateurActive = data?.provocateur_flag ?? false;
   const frictionActive = data?.friction_flag ?? false;
   const combinedOrder = data?.combined_order ?? null;
-  const frictionTriggerChars =
-    combinedOrder === "fric_first" ? FRICTION_EARLY_CHARS : MIN_CHARS;
   const provocation = data?.provocation ?? null;
   const taskType = (data?.task_type ?? taskOrder[round - 1] ?? "story") as
     | "story"
@@ -193,7 +191,7 @@ export default function SuggestionsPage({
     if (
       frictionActive &&
       !frictionTriggered &&
-      text.trim().length >= frictionTriggerChars
+      text.trim().length >= FRICTION_TRIGGER_CHARS
     ) {
       setFrictionTriggered(true);
       setMessages((prev) => [
@@ -207,7 +205,7 @@ export default function SuggestionsPage({
         },
       ]);
     }
-  }, [text, frictionActive, frictionTriggered, frictionTriggerChars]);
+  }, [text, frictionActive, frictionTriggered]);
 
   // ── Auto-scroll chat to bottom ────────────────────────────
 
