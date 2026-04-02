@@ -22,6 +22,7 @@ const ROC_ITEMS = [
   { key: "roc_monitor", label: "I monitored whether the AI-supported direction matched my task goals." },
   { key: "roc_change", label: "I changed my approach when the initial direction was not strong enough." },
   { key: "roc_check", label: "I checked whether my response was becoming too generic." },
+  { key: "attn_posttask", label: "To confirm you are reading each statement, please select 'Disagree' for this item." },
   { key: "roc_revise", label: "I actively revised or rejected ideas that did not fit well." },
   { key: "roc_original", label: "I tried to ensure that my final response remained original rather than routine." },
 ];

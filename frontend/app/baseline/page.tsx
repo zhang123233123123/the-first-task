@@ -74,6 +74,7 @@ const BLOCKS: Block[] = [
       { key: "loc_welldo", label: "When I do well on a task, it is usually because of what I did.", type: "scale" },
       { key: "loc_influence", label: "I can usually influence the quality of my outcomes through my own decisions.", type: "scale" },
       { key: "loc_outside_control", label: "Success in difficult tasks is often outside my control.", type: "scale" },
+      { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' for this item.", type: "scale" },
       { key: "loc_choices", label: "The choices I make usually have an important effect on the results I achieve.", type: "scale" },
       { key: "loc_change_approach", label: "I can usually improve an outcome if I change my approach.", type: "scale" },
     ],
