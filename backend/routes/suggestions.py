@@ -215,6 +215,7 @@ class ChatRequest(BaseModel):
     participant_id: str
     task_round: int
     user_message: str
+    original_question: str | None = None
 
 
 @router.post("/chat")
@@ -238,6 +239,8 @@ def chat_followup(body: ChatRequest, db: Session = Depends(get_db)):
         )
         .first()
     )
+    if not session and not p.task_order:
+        raise HTTPException(status_code=400, detail="Task order not yet assigned")
     task_type = session.task_type if session else p.task_order[body.task_round - 1]
     task_context = _get_prompt(task_type, body.task_round).get("instruction", "")
 
@@ -245,7 +248,7 @@ def chat_followup(body: ChatRequest, db: Session = Depends(get_db)):
 
     try:
         if prov_flag:
-            result = get_followup_provocation(task_type, body.user_message, body.user_message)
+            result = get_followup_provocation(task_type, body.user_message, body.original_question or body.user_message)
             return {"type": "provocation", **result}
         else:
             message = get_basic_ai_followup(task_type, body.user_message, task_context)

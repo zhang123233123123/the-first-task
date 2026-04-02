@@ -13,10 +13,10 @@ interface ParticipantState {
 
   setParticipant: (data: {
     participantId: string;
-    conditionId: string;
+    conditionId: string | null;
     provocateurFlag: boolean;
     frictionFlag: boolean;
-    taskOrder: string[];
+    taskOrder: string[] | null;
   }) => void;
   setCurrentRound: (round: number) => void;
   reset: () => void;
@@ -41,7 +41,7 @@ export const useStore = create<ParticipantState>()(
           conditionId: data.conditionId,
           provocateurFlag: data.provocateurFlag,
           frictionFlag: data.frictionFlag,
-          taskOrder: data.taskOrder,
+          taskOrder: data.taskOrder ?? [],
         }),
       setCurrentRound: (round) => set({ currentRound: round }),
       reset: () => set(initial),

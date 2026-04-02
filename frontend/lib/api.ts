@@ -12,6 +12,77 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
   return res.json();
 }
 
+export interface DebugParticipantSummary {
+  participant_id: string;
+  condition_id: string | null;
+  provocateur_flag: boolean;
+  friction_flag: boolean;
+  task_order: string[] | null;
+  current_page: string | null;
+  completed: boolean;
+  created_at: string | null;
+  completion_timestamp: string | null;
+  baseline_completed: boolean;
+  task1_artifact_saved: boolean;
+  task2_artifact_saved: boolean;
+  task1_gate_completed: boolean;
+  task2_gate_completed: boolean;
+  task1_posttask_saved: boolean;
+  task2_posttask_saved: boolean;
+}
+
+export interface DebugBaselineResponse {
+  participant_id: string;
+  responses: Record<string, unknown> | null;
+  completion_time_seconds: number | null;
+  created_at: string | null;
+}
+
+export interface DebugTaskSession {
+  task_round: number;
+  task_type: string;
+  suggestions_shown: unknown;
+  provocation_shown: unknown;
+  gate_shown: boolean;
+  gate_completed: boolean;
+  gate_responses: Record<string, unknown> | null;
+  gate_dwell_time_seconds: number | null;
+  final_artifact: string | null;
+  submission_timestamp: string | null;
+  production_dwell_time_seconds: number | null;
+  interaction_log: unknown;
+  created_at: string | null;
+}
+
+export interface DebugPostTaskResponse {
+  task_round: number;
+  task_type: string;
+  responses: Record<string, unknown> | null;
+  completion_time_seconds: number | null;
+  created_at: string | null;
+}
+
+export interface DebugParticipantDetail {
+  participant: {
+    participant_id: string;
+    condition_id: string | null;
+    provocateur_flag: boolean;
+    friction_flag: boolean;
+    task_order: string[] | null;
+    stratum: string | null;
+    consent_given: boolean;
+    consent_timestamp: string | null;
+    current_page: string | null;
+    completed: boolean;
+    completion_timestamp: string | null;
+    created_at: string | null;
+    updated_at: string | null;
+  };
+  baseline_response: DebugBaselineResponse | null;
+  task_sessions: DebugTaskSession[];
+  post_task_responses: DebugPostTaskResponse[];
+}
+
 // ── Participants ──────────────────────────────────────────────
 export const api = {
   initParticipant: (condition?: string) =>
@@ -29,11 +100,11 @@ export const api = {
   getParticipant: (id: string) =>
     request<{
       participant_id: string;
-      condition_id: string;
+      condition_id: string | null;
       provocateur_flag: boolean;
       friction_flag: boolean;
-      task_order: string[];
-      current_page: string;
+      task_order: string[] | null;
+      current_page: string | null;
       completed: boolean;
     }>(`/participants/${id}`),
 
@@ -51,6 +122,26 @@ export const api = {
 
   completeStudy: (id: string) =>
     request(`/participants/${id}/complete`, { method: "POST" }),
+
+  getDebugParticipants: (params?: {
+    q?: string;
+    condition?: string;
+    completed?: boolean;
+    sort?: "created_at_desc" | "created_at_asc" | "participant_id_asc" | "participant_id_desc";
+  }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.q) searchParams.set("q", params.q);
+    if (params?.condition) searchParams.set("condition", params.condition);
+    if (params?.completed != null) searchParams.set("completed", String(params.completed));
+    if (params?.sort) searchParams.set("sort", params.sort);
+    const query = searchParams.toString();
+    return request<{ count: number; items: DebugParticipantSummary[] }>(
+      `/debug/data/participants${query ? `?${query}` : ""}`
+    );
+  },
+
+  getDebugParticipantDetail: (participantId: string) =>
+    request<DebugParticipantDetail>(`/debug/data/participants/${participantId}`),
 
   // ── Suggestions ─────────────────────────────────────────────
   getTaskPrompt: (id: string, round: number) =>
@@ -84,6 +175,15 @@ export const api = {
         participant_id: participantId,
         responses,
         completion_time_seconds: completionTimeSec,
+      }),
+    }),
+
+  markGateShown: (participantId: string, round: number) =>
+    request("/responses/gate-shown", {
+      method: "POST",
+      body: JSON.stringify({
+        participant_id: participantId,
+        task_round: round,
       }),
     }),
 
@@ -126,7 +226,7 @@ export const api = {
       body: JSON.stringify({ participant_id: participantId, task_round: round, event }),
     }),
 
-  chatFollowup: (participantId: string, round: number, userMessage: string) =>
+  chatFollowup: (participantId: string, round: number, userMessage: string, originalQuestion?: string) =>
     request<
       | { type: "suggestion"; message: string }
       | { type: "provocation"; risk: string; alternative: string; question: string }
@@ -136,6 +236,7 @@ export const api = {
         participant_id: participantId,
         task_round: round,
         user_message: userMessage,
+        original_question: originalQuestion ?? null,
       }),
     }),
 

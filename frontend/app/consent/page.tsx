@@ -8,11 +8,12 @@ import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 import { Leaf, Clock, Shield, Users } from "lucide-react";
 
-const VALID_CONDITIONS = ["no_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"] as const;
+const VALID_CONDITIONS = ["no_ai", "basic_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"] as const;
 type Condition = typeof VALID_CONDITIONS[number];
 
 const CONDITION_LABELS: Record<Condition, string> = {
   no_ai:          "Control (No AI)",
+  basic_ai:       "Basic AI",
   provocateur:    "Challenge mode",
   friction:       "Reflection mode",
   prov_then_fric: "Challenge then Reflection",

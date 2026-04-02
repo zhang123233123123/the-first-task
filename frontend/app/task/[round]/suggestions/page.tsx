@@ -93,8 +93,15 @@ export default function SuggestionsPage({
   // ── Init ──────────────────────────────────────────────────
 
   useEffect(() => {
-    startTime.current = Date.now();
-  }, []);
+    const storageKey = `chi-timer-start-${round}`;
+    const saved = sessionStorage.getItem(storageKey);
+    if (saved) {
+      startTime.current = Number(saved);
+    } else {
+      startTime.current = Date.now();
+      sessionStorage.setItem(storageKey, String(startTime.current));
+    }
+  }, [round]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -204,8 +211,11 @@ export default function SuggestionsPage({
           frictionDone: false,
         },
       ]);
+      if (participantId) {
+        api.markGateShown(participantId, round).catch(() => {});
+      }
     }
-  }, [text, frictionActive, frictionTriggered]);
+  }, [text, frictionActive, frictionTriggered, participantId, round]);
 
   // ── Auto-scroll chat to bottom ────────────────────────────
 
@@ -254,7 +264,10 @@ export default function SuggestionsPage({
     if (participantId) {
       setFollowupLoading(true);
       try {
-        const response = await api.chatFollowup(participantId, round, trimmed);
+        // Extract the last provocation question to pass as context
+        const lastProvocation = [...messages].reverse().find((m) => m.type === "provocation" && m.provocation);
+        const originalQuestion = lastProvocation?.provocation?.question;
+        const response = await api.chatFollowup(participantId, round, trimmed, originalQuestion);
         if (response.type === "provocation") {
           setMessages((prev) => [
             ...prev,
@@ -344,6 +357,7 @@ export default function SuggestionsPage({
       await api.saveArtifact(participantId, round, text.trim(), dwell);
       await api.updateProgress(participantId, `task/${round}/survey`);
     }
+    sessionStorage.removeItem(`chi-timer-start-${round}`);
     router.push(`/task/${round}/survey`);
   };
 

@@ -331,7 +331,7 @@ export default function BaselinePage() {
                     <label className="text-sm text-[var(--warm-brown)] leading-relaxed">{item.label}</label>
                     <input
                       type="text"
-                      value={typeof responses[item.key] === "string" ? responses[item.key] : ""}
+                      value={String(responses[item.key] ?? "")}
                       onChange={(e) => setValue(item.key, e.target.value === "" ? null : e.target.value)}
                       placeholder={item.placeholder}
                       className="
@@ -350,7 +350,7 @@ export default function BaselinePage() {
                   <div key={item.key} className="space-y-2">
                     <label className="text-sm text-[var(--warm-brown)] leading-relaxed">{item.label}</label>
                     <select
-                      value={typeof responses[item.key] === "string" ? responses[item.key] : ""}
+                      value={String(responses[item.key] ?? "")}
                       onChange={(e) => setValue(item.key, e.target.value === "" ? null : e.target.value)}
                       className="
                         w-full rounded-2xl bg-white/60 border border-[var(--sage-light)]/40

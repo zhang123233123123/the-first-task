@@ -9,7 +9,7 @@ from typing import Any
 
 from database import get_db
 from models import BaselineResponse, TaskSession, PostTaskResponse, Participant
-from services.assignment import assign_task_order_balanced
+from services.assignment import assign_task_order_balanced, compute_stratum, assign_condition_minimized
 
 CONDITIONS = ["no_ai", "basic_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"]
 
@@ -79,8 +79,10 @@ def save_baseline(payload: BaselinePayload, db: Session = Depends(get_db)):
     ).first()
     assignment_result = {}
     if p and p.condition_id is None:
-        condition = random.choice(CONDITIONS)
+        stratum = compute_stratum(payload.responses)
+        condition = assign_condition_minimized(db, stratum)
         order = assign_task_order_balanced(db, condition)
+        p.stratum = stratum
         p.condition_id = condition
         p.task_order = order
         p.provocateur_flag = condition in ("provocateur", "prov_then_fric", "fric_then_prov")
@@ -95,6 +97,19 @@ def save_baseline(payload: BaselinePayload, db: Session = Depends(get_db)):
         }
 
     return {"status": "ok", **assignment_result}
+
+
+class GateShownPayload(BaseModel):
+    participant_id: str
+    task_round: int
+
+
+@router.post("/gate-shown")
+def mark_gate_shown(payload: GateShownPayload, db: Session = Depends(get_db)):
+    session = _get_session_or_404(db, payload.participant_id, payload.task_round)
+    session.gate_shown = True
+    db.commit()
+    return {"status": "ok"}
 
 
 @router.post("/gate")

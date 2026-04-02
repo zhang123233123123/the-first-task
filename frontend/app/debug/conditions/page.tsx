@@ -26,7 +26,7 @@ const CONDITIONS = [
   {
     id: "friction",
     title: "Friction only",
-    desc: "AI suggestions shown; inline reflection card appears at 80 chars. No challenge.",
+    desc: "AI suggestions shown; inline reflection card appears at 40 chars. No challenge.",
   },
   {
     id: "prov_then_fric",

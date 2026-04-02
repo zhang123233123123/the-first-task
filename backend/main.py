@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 import os
 
 from database import engine, Base
-from routes import participants, suggestions, responses
+from routes import debug_data, participants, suggestions, responses
 
 load_dotenv()
 
@@ -36,6 +36,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 app.include_router(participants.router)
 app.include_router(suggestions.router)
 app.include_router(responses.router)
+app.include_router(debug_data.router)
 
 
 @app.get("/health")
