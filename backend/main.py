@@ -13,11 +13,12 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="CHI Creativity Experiment API", version="1.0.0")
 
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+_frontend_raw = os.getenv("FRONTEND_URL", "http://localhost:3000")
+allowed_origins = [u.strip() for u in _frontend_raw.split(",")]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,10 +28,12 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     """Ensure unhandled exceptions still return CORS-safe JSON responses."""
+    origin = request.headers.get("origin", allowed_origins[0])
+    safe_origin = origin if origin in allowed_origins else allowed_origins[0]
     return JSONResponse(
         status_code=500,
         content={"detail": str(exc)},
-        headers={"Access-Control-Allow-Origin": FRONTEND_URL},
+        headers={"Access-Control-Allow-Origin": safe_origin},
     )
 
 app.include_router(participants.router)
