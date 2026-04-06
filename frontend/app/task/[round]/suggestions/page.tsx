@@ -381,6 +381,7 @@ export default function SuggestionsPage({
           <InlineFrictionCard
             taskType={taskType}
             requireIdeaSelection={!provocateurActive}
+            suggestionCount={data?.suggestions?.length || 1}
             onComplete={(r) => void handleFrictionComplete(r)}
           />
         </div>

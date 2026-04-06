@@ -26,6 +26,7 @@ const STRATEGY_OPTIONS = [
 interface InlineFrictionCardProps {
   taskType: "story" | "metaphor";
   requireIdeaSelection: boolean;
+  suggestionCount?: number;
   onComplete: (responses: {
     selected_idea: number | null;
     weakness: string;
@@ -37,6 +38,7 @@ interface InlineFrictionCardProps {
 export function InlineFrictionCard({
   taskType,
   requireIdeaSelection,
+  suggestionCount = 3,
   onComplete,
 }: InlineFrictionCardProps) {
   const [selectedIdea, setSelectedIdea] = useState<number | null>(null);
@@ -100,7 +102,7 @@ export function InlineFrictionCard({
             1. Which direction looks most promising?
           </p>
           <div className="flex gap-2">
-            {[1, 2, 3].map((n) => (
+            {Array.from({ length: suggestionCount }, (_, i) => i + 1).map((n) => (
               <button
                 key={n}
                 type="button"

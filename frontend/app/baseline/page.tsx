@@ -240,11 +240,18 @@ export default function BaselinePage() {
   const [responses, setResponses] = useState<Record<string, ResponseValue>>({});
   const [block, setBlock] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const startTime = useRef<number | null>(null);
 
   useEffect(() => {
     startTime.current = Date.now();
   }, []);
+
+  useEffect(() => {
+    if (!participantId) {
+      router.replace("/consent");
+    }
+  }, [participantId, router]);
 
   const currentBlock = BLOCKS[block];
   const allAnswered = currentBlock.items.every((item) => isAnswered(responses[item.key] ?? null));
@@ -268,25 +275,30 @@ export default function BaselinePage() {
     }
 
     setLoading(true);
+    setError(null);
     const startedAt = startTime.current ?? Date.now();
     const elapsed = (Date.now() - startedAt) / 1000;
 
-    if (participantId) {
-      const result = await api.saveBaseline(participantId, responses as Record<string, unknown>, elapsed);
-      // Real study mode: backend returns condition assignment after CSE scoring
-      if (result.condition_id) {
-        setParticipant({
-          participantId: participantId,
-          conditionId: result.condition_id,
-          provocateurFlag: result.provocateur_flag ?? false,
-          frictionFlag: result.friction_flag ?? false,
-          taskOrder: result.task_order ?? [],
-        });
+    try {
+      if (participantId) {
+        const result = await api.saveBaseline(participantId, responses as Record<string, unknown>, elapsed);
+        // Real study mode: backend returns condition assignment after CSE scoring
+        if (result.condition_id) {
+          setParticipant({
+            participantId: participantId,
+            conditionId: result.condition_id,
+            provocateurFlag: result.provocateur_flag ?? false,
+            frictionFlag: result.friction_flag ?? false,
+            taskOrder: result.task_order ?? [],
+          });
+        }
+        await api.updateProgress(participantId, "task/1/brief");
       }
-      await api.updateProgress(participantId, "task/1/brief");
+      router.push("/task/1/brief");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save. Please check your connection and try again.");
+      setLoading(false);
     }
-
-    router.push("/task/1/brief");
   };
 
   return (
@@ -403,6 +415,10 @@ export default function BaselinePage() {
               );
             })}
           </div>
+
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50/60 rounded-xl px-4 py-2">{error}</p>
+          )}
 
           <Button
             onClick={handleNext}
