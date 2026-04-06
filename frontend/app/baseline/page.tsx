@@ -247,12 +247,6 @@ export default function BaselinePage() {
     startTime.current = Date.now();
   }, []);
 
-  useEffect(() => {
-    if (!participantId) {
-      router.replace("/consent");
-    }
-  }, [participantId, router]);
-
   const currentBlock = BLOCKS[block];
   const allAnswered = currentBlock.items.every((item) => isAnswered(responses[item.key] ?? null));
 
