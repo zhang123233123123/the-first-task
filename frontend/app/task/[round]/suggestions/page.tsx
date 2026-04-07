@@ -446,7 +446,7 @@ export default function SuggestionsPage({
             <aside className="glass-card flex h-[28rem] min-h-0 flex-col overflow-hidden lg:h-auto lg:flex-1">
               <div className="px-4 pt-4 pb-2 border-b border-[var(--sage-light)]/20 flex-shrink-0">
                 <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
-                  {provocateurActive ? "AI Challenge" : noAiMode ? "No AI" : "AI Suggestions"}
+                  {provocateurActive ? "Chatbot" : noAiMode ? "Writing Task" : "AI Suggestions"}
                 </p>
               </div>
 
