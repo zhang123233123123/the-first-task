@@ -14,8 +14,19 @@ from services.deepseek import (
     METAPHOR_PROMPTS,
 )
 import random
+from datetime import datetime
+from sqlalchemy.orm.attributes import flag_modified
 
 router = APIRouter(prefix="/suggestions", tags=["suggestions"])
+
+
+def _append_log(session: TaskSession, db: Session, entry: dict) -> None:
+    """Append one event to session.interaction_log and persist."""
+    log = list(session.interaction_log or [])
+    log.append({**entry, "ts": datetime.utcnow().isoformat()})
+    session.interaction_log = log
+    flag_modified(session, "interaction_log")
+    db.commit()
 
 
 def _round_flags(condition_id: str, task_round: int) -> tuple[bool, bool]:
@@ -210,6 +221,14 @@ def prov_followup(body: ProvFollowupRequest, db: Session = Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
 
+    if session:
+        _append_log(session, db, {
+            "type": "prov_followup",
+            "user_reply": body.user_reply,
+            "original_question": body.original_question,
+            "ai_response": followup,
+        })
+
     return followup
 
 
@@ -251,12 +270,22 @@ def chat_followup(body: ChatRequest, db: Session = Depends(get_db)):
     try:
         if prov_flag:
             result = get_followup_provocation(task_type, body.user_message, body.original_question or body.user_message)
-            return {"type": "provocation", **result}
+            response = {"type": "provocation", **result}
         else:
             message = get_basic_ai_followup(task_type, body.user_message, task_context)
-            return {"type": "suggestion", "message": message}
+            response = {"type": "suggestion", "message": message}
     except Exception as e:
         raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+
+    if session:
+        _append_log(session, db, {
+            "type": "chat",
+            "user_message": body.user_message,
+            "original_question": body.original_question,
+            "ai_response": response,
+        })
+
+    return response
 
 
 def _get_prompt(task_type: str, task_round: int) -> dict:
