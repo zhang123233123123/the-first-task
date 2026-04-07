@@ -64,21 +64,25 @@ done
 
 # ── 输出地址汇总 ──────────────────────────────────────────────
 echo ""
-echo -e "${GREEN}${BOLD}============================================${NC}"
-echo -e "${GREEN}${BOLD}  服务已启动                               ${NC}"
-echo -e "${GREEN}${BOLD}============================================${NC}"
-echo -e "  ${CYAN}本地后端  ${NC}  http://localhost:8000"
-echo -e "  ${CYAN}本地前端  ${NC}  http://localhost:3000"
-echo -e "  ${CYAN}API 文档  ${NC}  http://localhost:8000/docs"
-echo -e "  ${CYAN}数据查看  ${NC}  http://localhost:3000/debug/data"
+echo -e "${GREEN}${BOLD}================================================${NC}"
+echo -e "${GREEN}${BOLD}  服务已启动                                   ${NC}"
+echo -e "${GREEN}${BOLD}================================================${NC}"
+echo -e "  ${CYAN}── 本地 ──────────────────────────────────${NC}"
+echo -e "  后端          http://localhost:8000"
+echo -e "  前端          http://localhost:3000"
+echo -e "  API 文档      http://localhost:8000/docs"
+echo -e "  数据查看      http://localhost:3000/debug/data"
+echo -e "  条件调试      http://localhost:3000/debug/conditions"
+echo ""
 if [ -n "$CF_URL" ]; then
-  echo -e "  ${YELLOW}${BOLD}公网地址  ${NC}  ${BOLD}${CF_URL}${NC}  ← 发给参与者"
-  echo -e "  ${YELLOW}${BOLD}公网Debug ${NC}  ${BOLD}${CF_URL}/debug/conditions${NC}"
+  echo -e "  ${YELLOW}── 公网 (Cloudflare) ─────────────────────${NC}"
+  echo -e "  ${YELLOW}${BOLD}实验入口  ${NC}  ${BOLD}${CF_URL}${NC}  ← 发给参与者"
+  echo -e "  ${YELLOW}数据查看  ${NC}  ${CF_URL}/debug/data"
+  echo -e "  ${YELLOW}条件调试  ${NC}  ${CF_URL}/debug/conditions"
 else
-  echo -e "  ${RED}公网地址  ${NC}  获取失败，请检查网络或重启"
+  echo -e "  ${RED}公网地址  获取失败，请检查网络或重启${NC}"
 fi
-echo -e "  ${CYAN}本地Debug ${NC}  http://localhost:3000/debug/conditions"
-echo -e "${GREEN}${BOLD}============================================${NC}"
+echo -e "${GREEN}${BOLD}================================================${NC}"
 echo -e "  按 ${YELLOW}Ctrl+C${NC} 关闭所有服务"
 echo ""
 
