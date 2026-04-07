@@ -84,8 +84,18 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
   const round = parseInt(roundStr, 10);
 
   const router = useRouter();
-  const { participantId, conditionId, provocateurFlag, frictionFlag } = useStore();
+  const { participantId, conditionId } = useStore();
   const isNoAi = conditionId === "no_ai";
+
+  // Per-round flags: combined conditions switch mode each round
+  const provocateurFlag =
+    conditionId === "provocateur" ||
+    (conditionId === "prov_then_fric" && round === 1) ||
+    (conditionId === "fric_then_prov" && round === 2);
+  const frictionFlag =
+    conditionId === "friction" ||
+    (conditionId === "prov_then_fric" && round === 2) ||
+    (conditionId === "fric_then_prov" && round === 1);
 
   const BLOCKS = [
     { id: "smi_aw",  title: "Awareness",         items: SMI_AWARENESS },
