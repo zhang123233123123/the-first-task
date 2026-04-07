@@ -5,7 +5,7 @@ interface LikertScaleProps {
   label: string;
   value: number | null;
   onChange: (val: number) => void;
-  points?: 5 | 7;
+  points?: 4 | 5 | 7;
   reversed?: boolean;
   lowLabel?: string;
   highLabel?: string;
