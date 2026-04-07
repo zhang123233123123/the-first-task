@@ -60,22 +60,41 @@ const OWNERSHIP_ITEMS = [
   { key: "own_shape", label: "I shaped the final response rather than merely cleaning up AI output." },
 ];
 
-const BLOCKS = [
-  { id: "koc", title: "Awareness during the task", items: KOC_ITEMS },
-  { id: "roc", title: "Evaluation during the task", items: ROC_ITEMS },
-  { id: "cse", title: "Creative confidence", items: CSE_ITEMS },
-  { id: "load", title: "Task effort", items: LOAD_ITEMS },
-  { id: "prov", title: "About the AI", items: PROV_CHECK },
-  { id: "friction", title: "About the interface", items: FRICTION_CHECK },
-  { id: "ownership", title: "Ownership", items: OWNERSHIP_ITEMS },
-];
 
 export default function SurveyPage({ params }: { params: Promise<{ round: string }> }) {
   const { round: roundStr } = use(params);
   const round = parseInt(roundStr, 10);
 
   const router = useRouter();
-  const { participantId, provocateurFlag, frictionFlag } = useStore();
+  const { participantId, conditionId, provocateurFlag, frictionFlag } = useStore();
+  const isNoAi = conditionId === "no_ai";
+
+  const BLOCKS = [
+    { id: "koc", title: "Awareness during the task", items: KOC_ITEMS },
+    { id: "roc", title: "Evaluation during the task", items: ROC_ITEMS },
+    {
+      id: "cse",
+      title: "Creative confidence",
+      items: CSE_ITEMS.map((it) =>
+        it.key === "cse_contribute" && isNoAi
+          ? { ...it, label: "I was able to contribute creatively rather than simply following the instructions." }
+          : it
+      ),
+    },
+    { id: "load", title: "Task effort", items: LOAD_ITEMS },
+    { id: "prov", title: "About the interaction", items: PROV_CHECK },
+    { id: "friction", title: "About the interface", items: FRICTION_CHECK },
+    {
+      id: "ownership",
+      title: "Ownership",
+      items: OWNERSHIP_ITEMS.map((it) =>
+        it.key === "own_shape" && isNoAi
+          ? { ...it, label: "I shaped the final response rather than merely cleaning up the suggestions." }
+          : it
+      ),
+    },
+  ];
+
   const [responses, setResponses] = useState<Record<string, number | null>>({});
   const [block, setBlock] = useState(0);
   const [loading, setLoading] = useState(false);
