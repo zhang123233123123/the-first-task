@@ -70,6 +70,7 @@ echo -e "${GREEN}${BOLD}============================================${NC}"
 echo -e "  ${CYAN}本地后端  ${NC}  http://localhost:8000"
 echo -e "  ${CYAN}本地前端  ${NC}  http://localhost:3000"
 echo -e "  ${CYAN}API 文档  ${NC}  http://localhost:8000/docs"
+echo -e "  ${CYAN}数据查看  ${NC}  http://localhost:8000/debug/data/participants"
 if [ -n "$CF_URL" ]; then
   echo -e "  ${YELLOW}${BOLD}公网地址  ${NC}  ${BOLD}${CF_URL}${NC}  ← 发给参与者"
   echo -e "  ${YELLOW}${BOLD}公网Debug ${NC}  ${BOLD}${CF_URL}/debug/conditions${NC}"
