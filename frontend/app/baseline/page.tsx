@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { LikertScale } from "@/components/ui/LikertScale";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -297,11 +297,13 @@ export default function BaselinePage() {
 
   return (
     <div className="healing-bg min-h-screen flex items-center justify-center px-4 py-12">
+      <AnimatePresence mode="wait">
       <motion.div
         key={block}
-        initial={{ opacity: 0, x: 20 }}
+        initial={{ opacity: 0, x: 16 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.35 }}
+        exit={{ opacity: 0, x: -16 }}
+        transition={{ duration: 0.18 }}
         className="w-full max-w-xl space-y-6"
       >
         <ProgressBar step={block + 1} total={BLOCKS.length} label="Background questions" />
@@ -424,6 +426,7 @@ export default function BaselinePage() {
           </Button>
         </div>
       </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
