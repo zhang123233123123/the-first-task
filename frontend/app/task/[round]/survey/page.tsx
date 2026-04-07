@@ -9,22 +9,40 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 
-const KOC_ITEMS = [
-  { key: "koc_useful", label: "During this task, I knew which AI suggestions were useful for my response." },
-  { key: "koc_ways", label: "I was aware of different ways I could develop my response." },
-  { key: "koc_judgment", label: "I understood which parts of the task required my own judgment." },
-  { key: "koc_tell", label: "I could tell when the AI was helping me generate possibilities." },
-  { key: "koc_unsuited", label: "I recognized when an AI suggestion was not well suited to my task goals." },
+// SMI – State Metacognitive Inventory (O'Neil & Abedi, 1996, CRESST Tech Report 469)
+// 4-point scale: 1=Not at all, 2=Somewhat, 3=Moderately so, 4=Very much so
+// "test questions" adapted to "the task" for creative writing context
+
+const SMI_AWARENESS = [
+  { key: "smi_aw1", label: "I was aware of my own thinking." },
+  { key: "smi_aw5", label: "I was aware of which thinking technique or strategy to use and when to use it." },
+  { key: "smi_aw9", label: "I was aware of the need to plan my course of action." },
+  { key: "smi_aw13", label: "I was aware of my ongoing thinking processes." },
+  { key: "smi_aw17", label: "I was aware of my trying to understand the task before I attempted to work on it." },
 ];
 
-const ROC_ITEMS = [
-  { key: "roc_eval", label: "I evaluated AI suggestions before deciding whether to use them." },
-  { key: "roc_monitor", label: "I monitored whether the AI-supported direction matched my task goals." },
-  { key: "roc_change", label: "I changed my approach when the initial direction was not strong enough." },
-  { key: "roc_check", label: "I checked whether my response was becoming too generic." },
-  { key: "attn_posttask", label: "To confirm you are reading each statement, please select 'Disagree' for this item." },
-  { key: "roc_revise", label: "I actively revised or rejected ideas that did not fit well." },
-  { key: "roc_original", label: "I tried to ensure that my final response remained original rather than routine." },
+const SMI_COGNITIVE_STRATEGY = [
+  { key: "smi_cs3",  label: "I attempted to discover the main ideas in the task." },
+  { key: "smi_cs7",  label: "I asked myself how the task related to what I already knew." },
+  { key: "smi_cs11", label: "I thought through the meaning of the task before I began to work on it." },
+  { key: "smi_cs15", label: "I used multiple thinking techniques or strategies to work on the task." },
+  { key: "smi_cs19", label: "I selected and organized relevant information to work on the task." },
+];
+
+const SMI_PLANNING = [
+  { key: "smi_pl4",  label: "I tried to understand the goals of the task before I attempted to work on it." },
+  { key: "smi_pl8",  label: "I tried to determine what the task required." },
+  { key: "smi_pl12", label: "I made sure I understood just what had to be done and how to do it." },
+  { key: "smi_pl16", label: "I determined how to approach the task." },
+  { key: "smi_pl20", label: "I tried to understand the task before I attempted to work on it." },
+];
+
+const SMI_SELF_CHECKING = [
+  { key: "smi_sc2",  label: "I checked my work while I was doing it." },
+  { key: "smi_sc6",  label: "I corrected my errors." },
+  { key: "smi_sc10", label: "I almost always knew how much of the task I had left to complete." },
+  { key: "smi_sc14", label: "I kept track of my progress and, if necessary, I changed my techniques or strategies." },
+  { key: "smi_sc18", label: "I checked my accuracy as I progressed through the task." },
 ];
 
 const CSE_ITEMS = [
@@ -70,8 +88,10 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
   const isNoAi = conditionId === "no_ai";
 
   const BLOCKS = [
-    { id: "koc", title: "Awareness during the task", items: KOC_ITEMS },
-    { id: "roc", title: "Evaluation during the task", items: ROC_ITEMS },
+    { id: "smi_aw",  title: "Awareness",         items: SMI_AWARENESS },
+    { id: "smi_cs",  title: "Cognitive strategy", items: SMI_COGNITIVE_STRATEGY },
+    { id: "smi_pl",  title: "Planning",           items: SMI_PLANNING },
+    { id: "smi_sc",  title: "Self-checking",      items: SMI_SELF_CHECKING },
     {
       id: "cse",
       title: "Creative confidence",
@@ -159,7 +179,9 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
         <div className="glass-card p-7 space-y-6">
           <div>
             <p className="text-xs text-[var(--warm-gray)] uppercase tracking-wide font-medium mb-1">
-              Please answer based on the task you just completed
+              {currentBlock.id.startsWith("smi_")
+                ? "Tell how you thought during the task you just completed"
+                : "Please answer based on the task you just completed"}
             </p>
             <h2 className="text-xl font-semibold text-[var(--warm-brown)]">{currentBlock.title}</h2>
           </div>
@@ -172,6 +194,11 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
                 label={item.label}
                 value={responses[item.key] ?? null}
                 onChange={(val) => setResponses((r) => ({ ...r, [item.key]: val }))}
+                {...(currentBlock.id.startsWith("smi_") && {
+                  points: 4,
+                  lowLabel: "Not at all",
+                  highLabel: "Very much so",
+                })}
               />
             ))}
           </div>
