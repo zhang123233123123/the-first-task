@@ -178,8 +178,17 @@ export default function SuggestionsPage({
       }));
       setMessages(suggMessages);
     } else {
-      // provocateur / combined → single combined provocation message (unless fric_first: wait for gate)
-      if (data.combined_order !== "fric_first" && data.provocation) {
+      if (data.combined_order === "fric_first") {
+        // fric_then_prov: show suggestions as basic AI first; provocation appears after friction gate
+        const suggMessages: ChatMessage[] = (data.suggestions ?? []).map((s) => ({
+          id: `suggestion-${(s as Suggestion).id}`,
+          type: "suggestion",
+          role: "ai",
+          content: (s as Suggestion).suggestion,
+        }));
+        setMessages(suggMessages);
+      } else if (data.provocation) {
+        // provocateur / prov_then_fric: show provocation immediately
         setMessages([
           {
             id: "provocation-0",
@@ -190,7 +199,6 @@ export default function SuggestionsPage({
           },
         ]);
       }
-      // fric_first: provocation will be started after the friction card is completed
     }
   }, [suggestionsLoading, data, messagesInitialized]);
 
