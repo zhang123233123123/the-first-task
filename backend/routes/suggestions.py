@@ -41,9 +41,9 @@ def _round_flags(condition_id: str, task_round: int) -> tuple[bool, bool]:
     if condition_id == "friction":
         return False, True
     if condition_id == "prov_then_fric":
-        return (True, False) if task_round == 1 else (False, True)
+        return True, True
     if condition_id == "fric_then_prov":
-        return (False, True) if task_round == 1 else (True, False)
+        return True, True
     return False, False  # fallback for old/unknown conditions
 
 
