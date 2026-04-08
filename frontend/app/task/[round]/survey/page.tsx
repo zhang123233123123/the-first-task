@@ -46,10 +46,9 @@ const SMI_SELF_CHECKING = [
 ];
 
 const CSE_ITEMS = [
-  { key: "cse_capable", label: "I was capable of producing a creative response in this task." },
-  { key: "cse_improve", label: "I could improve a weak idea into something more original during this task." },
+  { key: "cse_capable",   label: "I was capable of producing a creative response in this task." },
+  { key: "cse_improve",   label: "I could improve a weak idea into something more original during this task." },
   { key: "cse_confident", label: "I felt confident in my ability to shape the final creative outcome." },
-  { key: "cse_contribute", label: "I was able to contribute creatively rather than simply follow the AI." },
 ];
 
 const LOAD_ITEMS = [
@@ -73,9 +72,10 @@ const FRICTION_CHECK = [
 ];
 
 const OWNERSHIP_ITEMS = [
-  { key: "own_mine", label: "I felt that the final response was truly mine." },
-  { key: "own_direct", label: "I felt that I was directing the creative vision." },
-  { key: "own_shape", label: "I shaped the final response rather than merely cleaning up AI output." },
+  { key: "own_mine",       label: "I felt that the final response was truly mine." },
+  { key: "own_direct",     label: "I felt that I was directing the creative vision." },
+  { key: "own_shape",      label: "I shaped the final response rather than merely cleaning up AI output." },
+  { key: "own_contribute", label: "I was able to contribute creatively rather than simply follow the AI." },
 ];
 
 
@@ -105,11 +105,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     {
       id: "cse",
       title: "Creative confidence",
-      items: CSE_ITEMS.map((it) =>
-        it.key === "cse_contribute" && isNoAi
-          ? { ...it, label: "I was able to contribute creatively rather than simply following the instructions." }
-          : it
-      ),
+      items: CSE_ITEMS,
     },
     { id: "load", title: "Task effort", items: LOAD_ITEMS },
     { id: "prov", title: "About the interaction", items: PROV_CHECK },
@@ -117,11 +113,14 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     {
       id: "ownership",
       title: "Ownership",
-      items: OWNERSHIP_ITEMS.map((it) =>
-        it.key === "own_shape" && isNoAi
-          ? { ...it, label: "I shaped the final response rather than merely cleaning up the suggestions." }
-          : it
-      ),
+      items: OWNERSHIP_ITEMS.map((it) => {
+        if (!isNoAi) return it;
+        if (it.key === "own_shape")
+          return { ...it, label: "I shaped the final response rather than merely cleaning up the suggestions." };
+        if (it.key === "own_contribute")
+          return { ...it, label: "I was able to contribute creatively rather than simply following the instructions." };
+        return it;
+      }),
     },
   ];
 
