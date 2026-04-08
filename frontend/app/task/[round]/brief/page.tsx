@@ -48,18 +48,15 @@ export default function TaskBriefPage({ params }: { params: Promise<{ round: str
     : "Complete a creative metaphor as imaginatively as you can.";
 
   // Resolve effective condition for this specific round (combined conditions switch each round)
-  const effectiveCondition =
-    conditionId === "prov_then_fric" ? (round === 1 ? "provocateur" : "friction")
-    : conditionId === "fric_then_prov" ? (round === 1 ? "friction" : "provocateur")
-    : conditionId;
-
   const systemDesc: Record<string, string> = {
-    no_ai:       "Complete this task using your own ideas and creativity. No external suggestions will be provided.",
-    basic_ai:    "AI-generated ideas will appear in the left panel. You can use them as a starting point, adapt them, or ignore them entirely. The final response is always yours.",
-    provocateur: "A chatbot will appear in the left panel. It may challenge your assumptions or ask questions about your ideas. You decide how to respond and whether to incorporate any feedback.",
-    friction:    "As you write, you may be asked to pause briefly and reflect on your current direction before continuing. This is a normal part of the task.",
+    no_ai:          "Complete this task using your own ideas and creativity. No external suggestions will be provided.",
+    basic_ai:       "AI-generated ideas will appear in the left panel. You can use them as a starting point, adapt them, or ignore them entirely. The final response is always yours.",
+    provocateur:    "A chatbot will appear in the left panel. It may challenge your assumptions or ask questions about your ideas. You decide how to respond and whether to incorporate any feedback.",
+    friction:       "As you write, you may be asked to pause briefly and reflect on your current direction before continuing. This is a normal part of the task.",
+    prov_then_fric: "A challenge prompt will appear when you begin. As you write, you will also be asked to pause and reflect before continuing. The final response is always yours.",
+    fric_then_prov: "As you write, you will be asked to pause and reflect. After that, a challenge prompt will appear to help you think further. The final response is always yours.",
   };
-  const conditionHint = systemDesc[effectiveCondition ?? ""] ?? "The final response is always yours.";
+  const conditionHint = systemDesc[conditionId ?? ""] ?? "The final response is always yours.";
 
   const progressStep = round === 1 ? 1 : 9;
 

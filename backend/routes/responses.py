@@ -125,7 +125,24 @@ def save_gate(payload: GatePayload, db: Session = Depends(get_db)):
 
 @router.post("/artifact")
 def save_artifact(payload: ArtifactPayload, db: Session = Depends(get_db)):
-    session = _get_session_or_404(db, payload.participant_id, payload.task_round)
+    session = db.query(TaskSession).filter(
+        TaskSession.participant_id == payload.participant_id,
+        TaskSession.task_round == payload.task_round,
+    ).first()
+    if not session:
+        # Session may be missing if getSuggestions failed; create a minimal one
+        p = db.query(Participant).filter(
+            Participant.participant_id == payload.participant_id
+        ).first()
+        if not p:
+            raise HTTPException(status_code=404, detail="Participant not found")
+        task_type = (p.task_order or [])[payload.task_round - 1] if p.task_order else "story"
+        session = TaskSession(
+            participant_id=payload.participant_id,
+            task_round=payload.task_round,
+            task_type=task_type,
+        )
+        db.add(session)
     session.final_artifact = payload.final_artifact
     session.submission_timestamp = datetime.utcnow()
     session.production_dwell_time_seconds = payload.production_dwell_time_seconds
