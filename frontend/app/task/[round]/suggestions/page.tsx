@@ -77,6 +77,8 @@ export default function SuggestionsPage({
   const [chatReply, setChatReply] = useState("");
   const [followupLoading, setFollowupLoading] = useState(false);
   const [frictionTriggered, setFrictionTriggered] = useState(false);
+  const [frictionOptions, setFrictionOptions] = useState<{ weakness_options: string[]; strategy_options: string[] } | null>(null);
+  const [frictionOptionsLoading, setFrictionOptionsLoading] = useState(false);
 
   const [suggestionsLoading, setSuggestionsLoading] = useState(true);
   const [promptLoading, setPromptLoading] = useState(true);
@@ -213,6 +215,11 @@ export default function SuggestionsPage({
       ]);
       if (participantId) {
         api.markGateShown(participantId, round).catch(() => {});
+        setFrictionOptionsLoading(true);
+        api.getFrictionOptions(participantId, round, text)
+          .then((opts) => setFrictionOptions(opts))
+          .catch(() => {/* fallback to hardcoded options */})
+          .finally(() => setFrictionOptionsLoading(false));
       }
     }
   }, [text, frictionActive, frictionTriggered, participantId, round]);
@@ -382,6 +389,9 @@ export default function SuggestionsPage({
             taskType={taskType}
             requireIdeaSelection={!provocateurActive}
             suggestionCount={data?.suggestions?.length || 1}
+            weaknessOptions={frictionOptions?.weakness_options}
+            strategyOptions={frictionOptions?.strategy_options}
+            loading={frictionOptionsLoading}
             onComplete={(r) => void handleFrictionComplete(r)}
           />
         </div>

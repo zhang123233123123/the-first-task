@@ -187,6 +187,51 @@ def get_basic_ai_followup(task_type: str, user_message: str, task_context: str) 
     return response.choices[0].message.content.strip()
 
 
+def get_friction_card_options(task_type: str, user_text: str, suggestions: list[dict]) -> dict:
+    """Generate personalized weakness and strategy options based on the user's current writing."""
+    system_prompt = (
+        "You are a creative writing coach in a research experiment. "
+        "A participant has started writing a creative task and needs a brief reflective pause. "
+        "Generate short, specific options that relate directly to what they have written so far."
+    )
+
+    suggestions_text = "\n".join(
+        [f"{i+1}. {s.get('suggestion', '')}" for i, s in enumerate(suggestions)]
+    ) or "None"
+
+    user_prompt = (
+        f"Task type: {task_type}\n"
+        f"AI suggestions shown to participant:\n{suggestions_text}\n\n"
+        f"What the participant has written so far:\n\"{user_text}\"\n\n"
+        "Generate exactly 5 weakness options and 5 strategy options that are specific to this writing.\n"
+        "Weakness options should name concrete problems visible in what they wrote (e.g. 'Relies on the most obvious metaphor', 'The conflict feels unresolved').\n"
+        "Strategy options should name concrete next moves (e.g. 'Introduce an unexpected character', 'Flip the emotional register').\n"
+        "Always include 'Other' as the last option in each list.\n\n"
+        "Format as JSON: {\"weakness_options\": [\"...\", \"...\", \"...\", \"...\", \"Other\"], \"strategy_options\": [\"...\", \"...\", \"...\", \"...\", \"Other\"]}"
+    )
+
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+        response_format={"type": "json_object"},
+        temperature=0.8,
+    )
+
+    import json
+    data = json.loads(response.choices[0].message.content)
+    weakness = data.get("weakness_options", [])
+    strategy = data.get("strategy_options", [])
+    # Ensure "Other" is always present as last item
+    if weakness and weakness[-1] != "Other":
+        weakness.append("Other")
+    if strategy and strategy[-1] != "Other":
+        strategy.append("Other")
+    return {"weakness_options": weakness, "strategy_options": strategy}
+
+
 def _extract_list(data) -> list:
     """Robustly extract a list from whatever JSON DeepSeek returns."""
     if isinstance(data, list):

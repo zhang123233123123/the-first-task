@@ -10,6 +10,7 @@ from services.deepseek import (
     get_general_provocation,
     get_followup_provocation,
     get_basic_ai_followup,
+    get_friction_card_options,
     STORY_CUE_WORDS,
     METAPHOR_PROMPTS,
 )
@@ -286,6 +287,40 @@ def chat_followup(body: ChatRequest, db: Session = Depends(get_db)):
         })
 
     return response
+
+
+class FrictionOptionsRequest(BaseModel):
+    participant_id: str
+    task_round: int
+    user_text: str
+
+
+@router.post("/friction-options")
+def friction_options(body: FrictionOptionsRequest, db: Session = Depends(get_db)):
+    """Generate AI-personalized weakness and strategy options for the friction card."""
+    p = db.query(Participant).filter(Participant.participant_id == body.participant_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Participant not found")
+
+    session = (
+        db.query(TaskSession)
+        .filter(
+            TaskSession.participant_id == body.participant_id,
+            TaskSession.task_round == body.task_round,
+        )
+        .first()
+    )
+    if not session and not p.task_order:
+        raise HTTPException(status_code=400, detail="Task order not yet assigned")
+    task_type = session.task_type if session else p.task_order[body.task_round - 1]
+    suggestions = session.suggestions_shown or [] if session else []
+
+    try:
+        options = get_friction_card_options(task_type, body.user_text, suggestions)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"AI service unavailable: {str(e)}")
+
+    return options
 
 
 def _get_prompt(task_type: str, task_round: int) -> dict:

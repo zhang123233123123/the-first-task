@@ -27,6 +27,9 @@ interface InlineFrictionCardProps {
   taskType: "story" | "metaphor";
   requireIdeaSelection: boolean;
   suggestionCount?: number;
+  weaknessOptions?: string[];
+  strategyOptions?: string[];
+  loading?: boolean;
   onComplete: (responses: {
     selected_idea: number | null;
     weakness: string;
@@ -39,8 +42,13 @@ export function InlineFrictionCard({
   taskType,
   requireIdeaSelection,
   suggestionCount = 3,
+  weaknessOptions,
+  strategyOptions,
+  loading = false,
   onComplete,
 }: InlineFrictionCardProps) {
+  const resolvedWeaknessOptions = weaknessOptions ?? WEAKNESS_OPTIONS;
+  const resolvedStrategyOptions = strategyOptions ?? STRATEGY_OPTIONS;
   const [selectedIdea, setSelectedIdea] = useState<number | null>(null);
   const [weakness, setWeakness] = useState("");
   const [strategy, setStrategy] = useState("");
@@ -127,8 +135,15 @@ export function InlineFrictionCard({
         <p className="text-xs font-medium text-[var(--warm-brown)]">
           {requireIdeaSelection ? "2." : "1."} What is the {weaknessLabel}?
         </p>
+        {loading ? (
+          <div className="flex flex-wrap gap-1.5">
+            {[80, 64, 96, 72, 48].map((w) => (
+              <div key={w} className="h-6 rounded-xl bg-white/40 animate-pulse" style={{ width: `${w}px` }} />
+            ))}
+          </div>
+        ) : (
         <div className="flex flex-wrap gap-1.5">
-          {WEAKNESS_OPTIONS.map((opt) => (
+          {resolvedWeaknessOptions.map((opt) => (
             <button
               key={opt}
               type="button"
@@ -146,14 +161,22 @@ export function InlineFrictionCard({
             </button>
           ))}
         </div>
+        )}
       </div>
 
       <div className="space-y-2">
         <p className="text-xs font-medium text-[var(--warm-brown)]">
           {requireIdeaSelection ? "3." : "2."} What is your {strategyLabel}?
         </p>
+        {loading ? (
+          <div className="flex flex-wrap gap-1.5">
+            {[72, 88, 60, 96, 56].map((w) => (
+              <div key={w} className="h-6 rounded-xl bg-white/40 animate-pulse" style={{ width: `${w}px` }} />
+            ))}
+          </div>
+        ) : (
         <div className="flex flex-wrap gap-1.5">
-          {STRATEGY_OPTIONS.map((opt) => (
+          {resolvedStrategyOptions.map((opt) => (
             <button
               key={opt}
               type="button"
@@ -171,6 +194,7 @@ export function InlineFrictionCard({
             </button>
           ))}
         </div>
+        )}
       </div>
 
       <Button onClick={handleSubmit} disabled={!canSubmit} className="w-full" size="sm">

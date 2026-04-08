@@ -31,7 +31,7 @@ const CONDITIONS = [
   {
     id: "prov_then_fric",
     title: "Prov → Fric (combined)",
-    desc: "Provocation appears at load; inline friction card triggers at 80 chars.",
+    desc: "Provocation appears at load; inline friction card triggers at 40 chars.",
   },
   {
     id: "fric_then_prov",

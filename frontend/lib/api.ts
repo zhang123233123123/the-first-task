@@ -240,6 +240,16 @@ export const api = {
       }),
     }),
 
+  getFrictionOptions: (participantId: string, round: number, userText: string) =>
+    request<{ weakness_options: string[]; strategy_options: string[] }>("/suggestions/friction-options", {
+      method: "POST",
+      body: JSON.stringify({
+        participant_id: participantId,
+        task_round: round,
+        user_text: userText,
+      }),
+    }),
+
   getProvFollowup: (
     participantId: string,
     round: number,
