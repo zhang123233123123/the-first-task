@@ -455,9 +455,9 @@ export default function SuggestionsPage({
                 className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3"
               >
                 {noAiMode ? (
-                  <div className="flex flex-col items-center justify-center h-full pt-8 gap-3">
-                    <p className="text-2xl font-bold tracking-widest text-[var(--warm-gray)]/40 uppercase select-none">
-                      NO AI
+                  <div className="flex flex-col items-center justify-center h-full pt-8 gap-3 text-center px-4">
+                    <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
+                      Write freely using your own ideas. There are no AI suggestions for this task.
                     </p>
                   </div>
                 ) : suggestionsLoading && !messagesInitialized ? (
