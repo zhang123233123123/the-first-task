@@ -14,35 +14,35 @@ import { api } from "@/lib/api";
 // "test questions" adapted to "the task" for creative writing context
 
 const SMI_AWARENESS = [
-  { key: "smi_aw1", label: "I was aware of my own thinking." },
-  { key: "smi_aw5", label: "I was aware of which thinking technique or strategy to use and when to use it." },
-  { key: "smi_aw9", label: "I was aware of the need to plan my course of action." },
-  { key: "smi_aw13", label: "I was aware of my ongoing thinking processes." },
-  { key: "smi_aw17", label: "I was aware of my trying to understand the task before I attempted to work on it." },
+  { key: "smi_aw1",  label: "During the task, I was aware of my own thinking." },
+  { key: "smi_aw5",  label: "During the task, I was aware of which thinking technique or strategy to use and when to use it." },
+  { key: "smi_aw9",  label: "During the task, I was aware of the need to plan my course of action." },
+  { key: "smi_aw13", label: "During the task, I was aware of my ongoing thinking processes." },
+  { key: "smi_aw17", label: "During the task, I was aware of trying to understand it before I attempted to work on it." },
 ];
 
 const SMI_COGNITIVE_STRATEGY = [
-  { key: "smi_cs3",  label: "I attempted to discover the main ideas in the task." },
-  { key: "smi_cs7",  label: "I asked myself how the task related to what I already knew." },
-  { key: "smi_cs11", label: "I thought through the meaning of the task before I began to work on it." },
-  { key: "smi_cs15", label: "I used multiple thinking techniques or strategies to work on the task." },
-  { key: "smi_cs19", label: "I selected and organized relevant information to work on the task." },
+  { key: "smi_cs3",  label: "During the task, I attempted to discover the main ideas." },
+  { key: "smi_cs7",  label: "During the task, I asked myself how it related to what I already knew." },
+  { key: "smi_cs11", label: "During the task, I thought through the meaning of what I needed to do before I began." },
+  { key: "smi_cs15", label: "During the task, I used multiple thinking techniques or strategies." },
+  { key: "smi_cs19", label: "During the task, I selected and organized relevant information." },
 ];
 
 const SMI_PLANNING = [
-  { key: "smi_pl4",  label: "I tried to understand the goals of the task before I attempted to work on it." },
-  { key: "smi_pl8",  label: "I tried to determine what the task required." },
-  { key: "smi_pl12", label: "I made sure I understood just what had to be done and how to do it." },
-  { key: "smi_pl16", label: "I determined how to approach the task." },
-  { key: "smi_pl20", label: "I tried to understand the task before I attempted to work on it." },
+  { key: "smi_pl4",  label: "During the task, I tried to understand the goals before I attempted to work on it." },
+  { key: "smi_pl8",  label: "During the task, I tried to determine what was required." },
+  { key: "smi_pl12", label: "During the task, I made sure I understood just what had to be done and how to do it." },
+  { key: "smi_pl16", label: "During the task, I determined how to approach it." },
+  { key: "smi_pl20", label: "During the task, I tried to understand what was required before I attempted to work on it." },
 ];
 
 const SMI_SELF_CHECKING = [
-  { key: "smi_sc2",  label: "I checked my work while I was doing it." },
-  { key: "smi_sc6",  label: "I corrected my errors." },
-  { key: "smi_sc10", label: "I almost always knew how much of the task I had left to complete." },
-  { key: "smi_sc14", label: "I kept track of my progress and, if necessary, I changed my techniques or strategies." },
-  { key: "smi_sc18", label: "I checked my accuracy as I progressed through the task." },
+  { key: "smi_sc2",  label: "During the task, I checked my work as I went." },
+  { key: "smi_sc6",  label: "During the task, I corrected my errors." },
+  { key: "smi_sc10", label: "During the task, I almost always knew how much I had left to complete." },
+  { key: "smi_sc14", label: "During the task, I kept track of my progress and, if necessary, changed my techniques or strategies." },
+  { key: "smi_sc18", label: "During the task, I checked my accuracy as I progressed." },
 ];
 
 const CSE_ITEMS = [
@@ -188,9 +188,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
         <div className="glass-card p-7 space-y-6">
           <div>
             <p className="text-xs text-[var(--warm-gray)] uppercase tracking-wide font-medium mb-1">
-              {currentBlock.id.startsWith("smi_")
-                ? "Tell how you thought during the task you just completed"
-                : "Please answer based on the task you just completed"}
+              Answer the questions below in relation to the task you just completed
             </p>
             <h2 className="text-xl font-semibold text-[var(--warm-brown)]">{currentBlock.title}</h2>
           </div>
