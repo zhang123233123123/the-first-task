@@ -57,19 +57,6 @@ const LOAD_ITEMS = [
   { key: "load_demanding", label: "Completing this task was mentally demanding." },
 ];
 
-const PROV_CHECK = [
-  { key: "prov_challenged", label: "The AI challenged my assumptions." },
-  { key: "prov_alternative", label: "The AI presented alternative perspectives rather than only helping me complete the task." },
-  { key: "prov_rethink", label: "The AI prompted me to rethink my developing ideas." },
-  { key: "prov_critic", label: "The AI behaved more like a challenger than a simple assistant." },
-];
-
-const FRICTION_CHECK = [
-  { key: "fric_slowdown", label: "The interface made me slow down before moving on." },
-  { key: "fric_reflect", label: "The system required me to reflect before using ideas." },
-  { key: "fric_pause", label: "The interaction included deliberate pause points." },
-  { key: "fric_justify", label: "The design made me review or justify my choices rather than proceed immediately." },
-];
 
 const OWNERSHIP_ITEMS = [
   { key: "own_mine",       label: "I felt that the final response was truly mine." },
@@ -87,16 +74,8 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
   const { participantId, conditionId } = useStore();
   const isNoAi = conditionId === "no_ai";
 
-  // Per-round flags: combined conditions switch mode each round
-  const provocateurFlag =
-    conditionId === "provocateur" ||
-    (conditionId === "prov_then_fric" && round === 1) ||
-    (conditionId === "fric_then_prov" && round === 2);
-  const frictionFlag =
-    conditionId === "friction" ||
-    (conditionId === "prov_then_fric" && round === 2) ||
-    (conditionId === "fric_then_prov" && round === 1);
-
+  // Manipulation checks (PROV_CHECK / FRICTION_CHECK) are pilot-study only.
+  // They are NOT included in the main experiment survey per supervisor feedback.
   const BLOCKS = [
     { id: "smi_aw",  title: "Awareness",         items: SMI_AWARENESS },
     { id: "smi_cs",  title: "Cognitive strategy", items: SMI_COGNITIVE_STRATEGY },
@@ -108,8 +87,6 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
       items: CSE_ITEMS,
     },
     { id: "load", title: "Task effort", items: LOAD_ITEMS },
-    { id: "prov", title: "About the interaction", items: PROV_CHECK },
-    { id: "friction", title: "About the interface", items: FRICTION_CHECK },
     {
       id: "ownership",
       title: "Ownership",
@@ -133,11 +110,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     startTime.current = Date.now();
   }, []);
 
-  const activeBlocks = BLOCKS.filter((b) => {
-    if (b.id === "prov")     return provocateurFlag;
-    if (b.id === "friction") return frictionFlag;
-    return true;
-  });
+  const activeBlocks = BLOCKS;
 
   const currentBlock = activeBlocks[block];
   const allAnswered = currentBlock.items.every((it) => responses[it.key] != null);
