@@ -411,16 +411,23 @@ export default function SuggestionsPage({
         <div key={msg.id} id={msg.id}>
           <ChatBubble role="ai">
             <div className="space-y-2 text-sm leading-relaxed">
+              <p className="text-xs text-[var(--warm-gray)] italic border-b border-[var(--sage-light)]/30 pb-2 mb-1">
+                The chatbot below offers a different perspective on your task.
+                Consider it before continuing — you are free to agree, disagree, or ignore it.
+              </p>
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wide text-[var(--peach)] block mb-0.5">Risk</span>
+                <span className="text-xs text-[var(--warm-gray)]/70 block mb-0.5">A potential weakness in the current direction</span>
                 <span>{msg.provocation.risk}</span>
               </div>
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wide text-[var(--sage-dark)] block mb-0.5">Alternative</span>
+                <span className="text-xs text-[var(--warm-gray)]/70 block mb-0.5">A different angle you could explore</span>
                 <span>{msg.provocation.alternative}</span>
               </div>
               <div>
                 <span className="text-xs font-semibold uppercase tracking-wide text-[var(--lavender)] block mb-0.5">Question</span>
+                <span className="text-xs text-[var(--warm-gray)]/70 block mb-0.5">Something to reflect on</span>
                 <span className="italic">{msg.provocation.question}</span>
               </div>
             </div>
@@ -586,6 +593,9 @@ export default function SuggestionsPage({
                 </>
               ) : (
                 <>
+                  <p className="text-xs text-[var(--warm-gray)] leading-relaxed">
+                    Below you see a sentence with two gaps. Fill both gaps with words or short phrases to create a creative metaphor.
+                  </p>
                   <p className="text-lg font-medium text-[var(--warm-brown)]">
                     {prompt.metaphor_prompt as string}
                   </p>
