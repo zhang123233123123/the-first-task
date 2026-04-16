@@ -475,6 +475,22 @@ export default function SuggestionsPage({
                 </p>
               </div>
 
+              {/* ── Interface layout guide — shown in all conditions ── */}
+              <div className="px-4 py-2 bg-[var(--sage-light)]/10 border-b border-[var(--sage-light)]/20 flex-shrink-0 space-y-0.5">
+                <p className="text-xs text-[var(--warm-gray)]/80 leading-relaxed">
+                  <span className="font-medium text-[var(--warm-gray)]">This panel</span>
+                  {noAiMode
+                    ? " — writing guidance (no AI for this task)."
+                    : provocateurActive
+                    ? " — chatbot interaction. Use the box below to ask questions."
+                    : " — AI suggestions. Use the box below to ask follow-up questions."}
+                </p>
+                <p className="text-xs text-[var(--warm-gray)]/80 leading-relaxed">
+                  <span className="font-medium text-[var(--warm-gray)]">Right panel</span>
+                  {" — task instructions (top) and your answer space (bottom)."}
+                </p>
+              </div>
+
               <div
                 ref={chatScrollRef}
                 className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3"
