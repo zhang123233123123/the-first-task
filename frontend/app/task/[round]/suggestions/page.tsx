@@ -166,40 +166,8 @@ export default function SuggestionsPage({
 
   useEffect(() => {
     if (suggestionsLoading || messagesInitialized || !data) return;
+    // Messages start empty — AI responds only when user initiates chat
     setMessagesInitialized(true);
-
-    if (!data.provocateur_flag) {
-      // basic_ai / friction / no_ai → show suggestions as chat bubbles
-      const suggMessages: ChatMessage[] = (data.suggestions ?? []).map((s) => ({
-        id: `suggestion-${s.id}`,
-        type: "suggestion",
-        role: "ai",
-        content: s.suggestion,
-      }));
-      setMessages(suggMessages);
-    } else {
-      if (data.combined_order === "fric_first") {
-        // fric_then_prov: show suggestions as basic AI first; provocation appears after friction gate
-        const suggMessages: ChatMessage[] = (data.suggestions ?? []).map((s) => ({
-          id: `suggestion-${(s as Suggestion).id}`,
-          type: "suggestion",
-          role: "ai",
-          content: (s as Suggestion).suggestion,
-        }));
-        setMessages(suggMessages);
-      } else if (data.provocation) {
-        // provocateur / prov_then_fric: show provocation immediately
-        setMessages([
-          {
-            id: "provocation-0",
-            type: "provocation",
-            role: "ai",
-            content: "",
-            provocation: data.provocation,
-          },
-        ]);
-      }
-    }
   }, [suggestionsLoading, data, messagesInitialized]);
 
   // ── Friction inline trigger ───────────────────────────────
@@ -504,12 +472,18 @@ export default function SuggestionsPage({
                 ) : suggestionsLoading && !messagesInitialized ? (
                   <div className="flex flex-col items-center gap-2 pt-6">
                     <div className="w-5 h-5 rounded-full border-2 border-[var(--sage-light)]/40 border-t-[var(--sage)] animate-spin" />
-                    <p className="text-xs text-[var(--warm-gray)]">
-                      {provocateurActive ? "Preparing challenge…" : "Generating suggestions…"}
-                    </p>
+                    <p className="text-xs text-[var(--warm-gray)]">Loading…</p>
                   </div>
                 ) : suggestionsError ? (
                   <p className="text-xs text-red-500 break-all">{suggestionsError}</p>
+                ) : messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full pt-8 gap-3 text-center px-4">
+                    <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
+                      {provocateurActive
+                        ? "Send a message below to start the conversation."
+                        : "Send a message below to get suggestions for your task."}
+                    </p>
+                  </div>
                 ) : (
                   messages.map((msg) => renderMessage(msg))
                 )}
