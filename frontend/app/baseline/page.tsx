@@ -15,7 +15,7 @@ type ScaleItem = {
   key: string;
   label: string;
   type: "scale";
-  points?: 5 | 7;
+  points?: 4 | 5 | 7;
   lowLabel?: string;
   highLabel?: string;
 };
@@ -74,11 +74,11 @@ const BLOCKS: Block[] = [
     title: "Locus of Control",
     description: "Please indicate how strongly you agree or disagree with the following statements.",
     items: [
-      { key: "loc_ie1", label: "I can bring about positive changes by my own actions.", type: "scale" },
-      { key: "loc_ie2", label: "How my life goes is my own doing.", type: "scale" },
-      { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' for this item.", type: "scale" },
-      { key: "loc_ie3", label: "I have little influence on how my life turns out.", type: "scale" },
-      { key: "loc_ie4", label: "What I achieve in life is largely a matter of fate or luck.", type: "scale" },
+      { key: "loc_ie1", label: "I can bring about positive changes by my own actions.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie2", label: "How my life goes is my own doing.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' (4) for this item.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie3", label: "I have little influence on how my life turns out.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie4", label: "What I achieve in life is largely a matter of fate or luck.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
     ],
   },
   {
