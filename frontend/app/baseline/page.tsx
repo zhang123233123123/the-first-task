@@ -66,17 +66,19 @@ const BLOCKS: Block[] = [
     ],
   },
   {
+    // IE-4: Internal-External Locus of Control Short Scale
+    // Kovaleva, A. (2012). IE-4: A Four-Item Measure of Internal-External Locus of Control. GESIS Working Papers 2012|18.
+    // 2 internal-control items + 2 external-control items (reversed).
+    // Used as a stable trait measure; placed pre-task as a baseline control variable.
     id: "loc",
     title: "Locus of Control",
     description: "Please indicate how strongly you agree or disagree with the following statements.",
     items: [
-      { key: "loc_effort", label: "My performance in demanding tasks usually depends on my own effort.", type: "scale" },
-      { key: "loc_welldo", label: "When I do well on a task, it is usually because of what I did.", type: "scale" },
-      { key: "loc_influence", label: "I can usually influence the quality of my outcomes through my own decisions.", type: "scale" },
-      { key: "loc_outside_control", label: "Success in difficult tasks is often outside my control.", type: "scale" },
+      { key: "loc_ie1", label: "I can bring about positive changes by my own actions.", type: "scale" },
+      { key: "loc_ie2", label: "How my life goes is my own doing.", type: "scale" },
       { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' for this item.", type: "scale" },
-      { key: "loc_choices", label: "The choices I make usually have an important effect on the results I achieve.", type: "scale" },
-      { key: "loc_change_approach", label: "I can usually improve an outcome if I change my approach.", type: "scale" },
+      { key: "loc_ie3", label: "I have little influence on how my life turns out.", type: "scale" },
+      { key: "loc_ie4", label: "What I achieve in life is largely a matter of fate or luck.", type: "scale" },
     ],
   },
   {
