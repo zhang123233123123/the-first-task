@@ -11,6 +11,16 @@ load_dotenv()
 
 Base.metadata.create_all(bind=engine)
 
+# Lightweight column migration for SQLite (create_all does not add new columns)
+with engine.connect() as _conn:
+    try:
+        _conn.execute(__import__("sqlalchemy").text(
+            "ALTER TABLE participants ADD COLUMN is_pilot BOOLEAN DEFAULT 0 NOT NULL"
+        ))
+        _conn.commit()
+    except Exception:
+        pass  # column already exists
+
 app = FastAPI(title="CHI Creativity Experiment API", version="1.0.0")
 
 _frontend_raw = os.getenv("FRONTEND_URL", "http://localhost:3000")
