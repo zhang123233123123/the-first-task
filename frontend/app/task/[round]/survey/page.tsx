@@ -51,10 +51,12 @@ const CSE_ITEMS = [
   { key: "cse_confident", label: "I felt confident in my ability to shape the final creative outcome." },
 ];
 
+// Cognitive Load – adapted from NASA-TLX (Hart & Staveland, 1988)
+// Covers: Mental Demand, Effort, Frustration
 const LOAD_ITEMS = [
-  { key: "load_effort", label: "This task required substantial mental effort." },
-  { key: "load_think", label: "I had to think carefully before moving forward." },
-  { key: "load_demanding", label: "Completing this task was mentally demanding." },
+  { key: "load_mental",      label: "This task required substantial mental effort." },
+  { key: "load_effort",      label: "I had to work hard to accomplish what I did in this task." },
+  { key: "load_frustration", label: "I felt frustrated or stressed during this task." },
 ];
 
 
