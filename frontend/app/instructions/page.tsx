@@ -10,43 +10,53 @@ import { BookOpen, Sparkles, PenLine, CheckSquare } from "lucide-react";
 export default function InstructionsPage() {
   const router = useRouter();
   const participantId = useStore((s) => s.participantId);
+  const isPilot = useStore((s) => s.isPilot);
 
   const steps = [
     {
       icon: BookOpen,
       title: "Two creative tasks",
-      desc: "You will complete two short creative tasks with AI support: one story task and one metaphor task.",
+      desc: "You will complete two short creative tasks: one story task and one metaphor task.",
       color: "var(--sage-light)",
       iconColor: "var(--sage-dark)",
     },
     {
       icon: CheckSquare,
-      title: "Questionnaires",
-      desc: "The study also includes background questions before the tasks and short questionnaires after each task.",
+      title: "Short questionnaire",
+      desc: isPilot
+        ? "After each task you will answer a short questionnaire about your experience."
+        : "The study also includes background questions before the tasks and short questionnaires after each task.",
       color: "var(--sage-light)",
       iconColor: "var(--sage-dark)",
     },
     {
       icon: Sparkles,
-      title: "AI suggestions",
-      desc: "The system will show you a few AI-generated ideas at each task. You do not need to type any prompts - they appear automatically.",
+      title: "AI assistance",
+      desc: "The left panel will provide some form of support during each task. You decide what to keep, adapt, or ignore.",
       color: "var(--lavender-light)",
       iconColor: "var(--lavender)",
     },
     {
       icon: PenLine,
       title: "Your own voice",
-      desc: "Use the suggestions as a template. You decide what to keep, adapt, or ignore. The final response is always yours.",
+      desc: "The final response is always yours.",
       color: "var(--peach-light)",
       iconColor: "var(--peach)",
     },
   ];
 
   const handleContinue = async () => {
-    if (participantId) {
-      await api.updateProgress(participantId, "baseline");
+    if (isPilot) {
+      if (participantId) {
+        await api.updateProgress(participantId, "task/1/brief");
+      }
+      router.push("/task/1/brief");
+    } else {
+      if (participantId) {
+        await api.updateProgress(participantId, "baseline");
+      }
+      router.push("/baseline");
     }
-    router.push("/baseline");
   };
 
   return (
@@ -89,7 +99,9 @@ export default function InstructionsPage() {
 
         <div className="glass-card p-4 text-center">
           <p className="text-sm text-[var(--warm-gray)]">
-            First, you will complete the background questionnaire. After each task, you will answer a short questionnaire about your experience before continuing.
+            {isPilot
+              ? "After each task, you will answer a short questionnaire about your experience before continuing."
+              : "First, you will complete the background questionnaire. After each task, you will answer a short questionnaire about your experience before continuing."}
           </p>
         </div>
 

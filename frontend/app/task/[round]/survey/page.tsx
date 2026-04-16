@@ -9,6 +9,23 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
 
+// ── Pilot-only: manipulation check items per condition ───────────────────────
+// 7-point Likert (1=Strongly disagree, 7=Strongly agree)
+const PILOT_MANIP_ITEMS: Record<string, { key: string; label: string }[]> = {
+  friction: [
+    { key: "mc_friction1", label: "The interface made me pause and reflect before continuing." },
+    { key: "mc_friction2", label: "The reflection prompts made me reconsider my approach." },
+  ],
+  provocateur: [
+    { key: "mc_prov1", label: "The chatbot challenged my current thinking." },
+    { key: "mc_prov2", label: "The chatbot made me consider different perspectives." },
+  ],
+  basic_ai: [
+    { key: "mc_basic1", label: "The AI suggestions were helpful for developing my ideas." },
+    { key: "mc_basic2", label: "I found the AI suggestions relevant to my writing." },
+  ],
+};
+
 // SMI – State Metacognitive Inventory (O'Neil & Abedi, 1996, CRESST Tech Report 469)
 // 4-point scale: 1=Not at all, 2=Somewhat, 3=Moderately so, 4=Very much so
 // "test questions" adapted to "the task" for creative writing context
@@ -73,8 +90,30 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
   const round = parseInt(roundStr, 10);
 
   const router = useRouter();
-  const { participantId, conditionId } = useStore();
+  const { participantId, conditionId, isPilot } = useStore();
   const isNoAi = conditionId === "no_ai";
+
+  // ── Pilot survey: demographics + condition-specific manipulation check ──────
+  const pilotManipItems = PILOT_MANIP_ITEMS[conditionId ?? "basic_ai"] ?? PILOT_MANIP_ITEMS.basic_ai;
+
+  // Pilot round 1: manipulation check only
+  // Pilot round 2: manipulation check + demographics (collected once at end)
+  const PILOT_BLOCKS = [
+    {
+      id: "pilot_manip",
+      title: "About your experience",
+      items: pilotManipItems.map((it) => ({ ...it, type: "scale" as const })),
+    },
+    ...(round === 2 ? [{
+      id: "pilot_demo",
+      title: "Background",
+      items: [
+        { key: "demo_age",     label: "What is your age?",                    type: "select" as const, options: ["18-24","25-34","35-44","45-54","55-64","65 or older","Prefer not to say"] },
+        { key: "demo_gender",  label: "What is your gender?",                 type: "select" as const, options: ["Female","Male","Non-binary","Prefer not to say"] },
+        { key: "demo_english", label: "What is your English proficiency?",    type: "select" as const, options: ["Beginner","Proficient","Advanced","Native speaker","Prefer not to say"] },
+      ],
+    }] : []),
+  ];
 
   // Manipulation checks (PROV_CHECK / FRICTION_CHECK) are pilot-study only.
   // They are NOT included in the main experiment survey per supervisor feedback.
@@ -103,7 +142,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     },
   ];
 
-  const [responses, setResponses] = useState<Record<string, number | null>>({});
+  const [responses, setResponses] = useState<Record<string, number | string | null>>({});
   const [block, setBlock] = useState(0);
   const [loading, setLoading] = useState(false);
   const startTime = useRef<number | null>(null);
@@ -112,10 +151,13 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     startTime.current = Date.now();
   }, []);
 
-  const activeBlocks = BLOCKS;
+  const activeBlocks = isPilot ? PILOT_BLOCKS : BLOCKS;
 
   const currentBlock = activeBlocks[block];
-  const allAnswered = currentBlock.items.every((it) => responses[it.key] != null);
+  const allAnswered = currentBlock.items.every((it) => {
+    const v = responses[it.key];
+    return v !== null && v !== undefined && v !== "";
+  });
 
   const handleNext = async () => {
     if (block < activeBlocks.length - 1) {
@@ -169,20 +211,44 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
           </div>
 
           <div className="space-y-6">
-            {currentBlock.items.map((item) => (
-              <LikertScale
-                key={item.key}
-                name={item.key}
-                label={item.label}
-                value={responses[item.key] ?? null}
-                onChange={(val) => setResponses((r) => ({ ...r, [item.key]: val }))}
-                {...(currentBlock.id.startsWith("smi_") && {
-                  points: 4,
-                  lowLabel: "Not at all",
-                  highLabel: "Very much so",
-                })}
-              />
-            ))}
+            {currentBlock.items.map((item) => {
+              if ("type" in item && item.type === "select") {
+                return (
+                  <div key={item.key} className="space-y-2">
+                    <label className="text-sm text-[var(--warm-brown)] leading-relaxed">{item.label}</label>
+                    <select
+                      value={String(responses[item.key] ?? "")}
+                      onChange={(e) => setResponses((r) => ({ ...r, [item.key]: e.target.value || null }))}
+                      className="w-full rounded-2xl bg-white/60 border border-[var(--sage-light)]/40 px-4 py-3 text-sm text-[var(--warm-brown)] focus:outline-none focus:ring-2 focus:ring-[var(--sage)]/40"
+                    >
+                      <option value="">Select an option</option>
+                      {"options" in item && (item.options as string[]).map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              }
+              return (
+                <LikertScale
+                  key={item.key}
+                  name={item.key}
+                  label={item.label}
+                  value={(responses[item.key] as number | null) ?? null}
+                  onChange={(val) => setResponses((r) => ({ ...r, [item.key]: val }))}
+                  {...(currentBlock.id.startsWith("smi_") && {
+                    points: 4,
+                    lowLabel: "Not at all",
+                    highLabel: "Very much so",
+                  })}
+                  {...(currentBlock.id === "pilot_manip" && {
+                    points: 7,
+                    lowLabel: "Strongly disagree",
+                    highLabel: "Strongly agree",
+                  })}
+                />
+              );
+            })}
           </div>
 
           <Button
