@@ -86,7 +86,7 @@ function ConsentContent() {
             Creativity &amp; AI Study
           </h1>
           <p className="text-[var(--warm-gray)] text-base leading-relaxed max-w-lg mx-auto">
-            Welcome. This study explores how people work creatively alongside AI.
+            Welcome! This study explores how people engage creatively when working alongside AI.
             We are glad you are here.
           </p>
         </div>
@@ -96,7 +96,7 @@ function ConsentContent() {
           {[
             { icon: Clock, label: "About 20-30 minutes", desc: "Depends on your pace" },
             { icon: Shield, label: "Anonymous", desc: "Your data is private" },
-            { icon: Users, label: "2 tasks + questionnaires", desc: "Creative exercises and study measures" },
+            { icon: Users, label: "2 tasks + questionnaires", desc: "Creative writing exercises and brief surveys" },
           ].map(({ icon: Icon, label, desc }) => (
             <div key={label} className="glass-card p-4 text-center space-y-1">
               <Icon className="w-5 h-5 mx-auto text-[var(--sage)]" />
@@ -111,10 +111,10 @@ function ConsentContent() {
           <h2 className="font-semibold text-[var(--warm-brown)]">Informed Consent</h2>
           <div className="text-sm text-[var(--warm-gray)] space-y-2 leading-relaxed">
             <p>
-              This study is conducted as part of academic research on human-AI creativity. Your participation is entirely voluntary, and you may withdraw at any time without penalty.
+              This study is conducted as part of academic research on human–AI creativity. Your participation is entirely voluntary, and you may withdraw at any time without penalty.
             </p>
             <p>
-              You will interact with an AI system to complete two short creative tasks and related questionnaires about your background and experience. The study involves no deception or risk beyond everyday computer use.
+              You will complete two short creative writing tasks, with possible AI assistance, and answer related questionnaires about your background and experience. The study involves no deception or risk beyond everyday computer use.
             </p>
             <p>
               All responses are anonymous. No personally identifying information will be collected or shared. Data will be used solely for academic research purposes.
@@ -123,7 +123,7 @@ function ConsentContent() {
               By continuing, you confirm that you are 18 years of age or older and agree to participate.
             </p>
             <p>
-              Please note that responses may be reviewed for data quality, completeness, and response patterns. Records showing incomplete or inattentive effort may be excluded from analysis and may not be eligible for compensation where compensation applies.
+              Please note that responses may be reviewed for data quality, completeness, and response patterns. Submissions showing incomplete or inattentive effort may be excluded from analysis and may not be eligible for compensation where applicable.
             </p>
           </div>
 

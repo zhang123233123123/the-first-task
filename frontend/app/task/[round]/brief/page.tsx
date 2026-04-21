@@ -44,17 +44,17 @@ export default function TaskBriefPage({ params }: { params: Promise<{ round: str
   const isStory = taskType === "story";
   const taskLabel = isStory ? "Short Story Task" : "Creative Metaphor Task";
   const taskDesc = isStory
-    ? "Write a creative short story of about 4–6 sentences using the prompt words provided."
+    ? "Write a creative short story of about 4\u20136 sentences using the prompt words provided."
     : "Complete a creative metaphor as imaginatively as you can.";
 
   // Resolve effective condition for this specific round (combined conditions switch each round)
   const systemDesc: Record<string, string> = {
-    no_ai:          "Complete this task using your own ideas and creativity. No external suggestions will be provided.",
-    basic_ai:       "AI-generated ideas will appear in the left panel. You can use them as a starting point, adapt them, or ignore them entirely. The final response is always yours.",
-    provocateur:    "A chatbot will appear in the left panel. It may challenge your assumptions or ask questions about your ideas. You decide how to respond and whether to incorporate any feedback.",
+    no_ai:          "Complete this task using your own ideas and creativity. No AI assistance will be provided.",
+    basic_ai:       "An AI assistant will be available in the left panel. You can ask it for creative ideas at any time. The final response is always yours.",
+    provocateur:    "An AI assistant will appear in the left panel. It may challenge your assumptions or ask questions about your ideas. You decide how to respond and whether to incorporate any feedback.",
     friction:       "As you write, you may be asked to pause briefly and reflect on your current direction before continuing. This is a normal part of the task.",
-    prov_then_fric: "A challenge prompt will appear when you begin. As you write, you will also be asked to pause and reflect before continuing. The final response is always yours.",
-    fric_then_prov: "As you write, you will be asked to pause and reflect. After that, a challenge prompt will appear to help you think further. The final response is always yours.",
+    prov_then_fric: "An AI assistant may challenge your thinking, and you may also be asked to pause and reflect as you write. The final response is always yours.",
+    fric_then_prov: "As you write, you may be asked to pause and reflect. An AI assistant may also challenge your thinking to help you explore further. The final response is always yours.",
   };
   const conditionHint = systemDesc[conditionId ?? ""] ?? "The final response is always yours.";
 
@@ -103,7 +103,7 @@ export default function TaskBriefPage({ params }: { params: Promise<{ round: str
                 <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">Your work</p>
               </div>
               <p className="text-sm font-semibold text-[var(--warm-brown)]">At least 80 characters</p>
-              <p className="text-xs text-[var(--warm-gray)]">The final response is always yours.</p>
+              <p className="text-xs text-[var(--warm-gray)]">The final response is always yours</p>
             </div>
           </div>
 

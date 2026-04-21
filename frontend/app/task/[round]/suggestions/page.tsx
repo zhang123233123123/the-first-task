@@ -66,7 +66,7 @@ export default function SuggestionsPage({
   const round = parseInt(roundStr, 10);
 
   const router = useRouter();
-  const { participantId, taskOrder, setCurrentRound } = useStore();
+  const { participantId, taskOrder, setCurrentRound, studyMode } = useStore();
 
   const [data, setData] = useState<SuggestionsData | null>(null);
   const [promptData, setPromptData] = useState<Record<string, unknown> | null>(null);
@@ -163,43 +163,13 @@ export default function SuggestionsPage({
   > | null;
 
   // ── Initialize message stream once data loads ────────────
+  // Data is fetched in background for condition flags, but messages
+  // remain empty until the user actively sends a message.
 
   useEffect(() => {
     if (suggestionsLoading || messagesInitialized || !data) return;
     setMessagesInitialized(true);
-
-    if (!data.provocateur_flag) {
-      // basic_ai / friction / no_ai → show suggestions as chat bubbles
-      const suggMessages: ChatMessage[] = (data.suggestions ?? []).map((s) => ({
-        id: `suggestion-${s.id}`,
-        type: "suggestion",
-        role: "ai",
-        content: s.suggestion,
-      }));
-      setMessages(suggMessages);
-    } else {
-      if (data.combined_order === "fric_first") {
-        // fric_then_prov: show suggestions as basic AI first; provocation appears after friction gate
-        const suggMessages: ChatMessage[] = (data.suggestions ?? []).map((s) => ({
-          id: `suggestion-${(s as Suggestion).id}`,
-          type: "suggestion",
-          role: "ai",
-          content: (s as Suggestion).suggestion,
-        }));
-        setMessages(suggMessages);
-      } else if (data.provocation) {
-        // provocateur / prov_then_fric: show provocation immediately
-        setMessages([
-          {
-            id: "provocation-0",
-            type: "provocation",
-            role: "ai",
-            content: "",
-            provocation: data.provocation,
-          },
-        ]);
-      }
-    }
+    // No auto-populated messages — user must initiate the conversation.
   }, [suggestionsLoading, data, messagesInitialized]);
 
   // ── Friction inline trigger ───────────────────────────────
@@ -370,10 +340,23 @@ export default function SuggestionsPage({
     const dwell = (Date.now() - (startTime.current ?? Date.now())) / 1000;
     if (participantId) {
       await api.saveArtifact(participantId, round, text.trim(), dwell);
-      await api.updateProgress(participantId, `task/${round}/survey`);
     }
     sessionStorage.removeItem(`chi-timer-start-${round}`);
-    router.push(`/task/${round}/survey`);
+
+    if (studyMode === "pilot") {
+      // Pilot: skip post-task survey, go to next task or manipulation check
+      if (round === 1) {
+        if (participantId) await api.updateProgress(participantId, "task/2/brief");
+        router.push("/task/2/brief");
+      } else {
+        if (participantId) await api.updateProgress(participantId, "pilot/check");
+        router.push("/pilot/check");
+      }
+    } else {
+      // Main experiment: go to post-task survey
+      if (participantId) await api.updateProgress(participantId, `task/${round}/survey`);
+      router.push(`/task/${round}/survey`);
+    }
   };
 
   // ── Render a single chat message ─────────────────────────
@@ -411,16 +394,19 @@ export default function SuggestionsPage({
         <div key={msg.id} id={msg.id}>
           <ChatBubble role="ai">
             <div className="space-y-2 text-sm leading-relaxed">
+              <p className="text-xs text-[var(--warm-gray)]/70 italic mb-1">
+                The AI offers a different perspective:
+              </p>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--peach)] block mb-0.5">Risk</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--peach)] block mb-0.5">Potential weakness</span>
                 <span>{msg.provocation.risk}</span>
               </div>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--sage-dark)] block mb-0.5">Alternative</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--sage-dark)] block mb-0.5">A different direction</span>
                 <span>{msg.provocation.alternative}</span>
               </div>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--lavender)] block mb-0.5">Question</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--lavender)] block mb-0.5">Something to consider</span>
                 <span className="italic">{msg.provocation.question}</span>
               </div>
             </div>
@@ -464,7 +450,7 @@ export default function SuggestionsPage({
             <aside className="glass-card flex h-[28rem] min-h-0 flex-col overflow-hidden lg:h-auto lg:flex-1">
               <div className="px-4 pt-4 pb-2 border-b border-[var(--sage-light)]/20 flex-shrink-0">
                 <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
-                  {provocateurActive ? "Chatbot" : noAiMode ? "Writing Task" : "AI Suggestions"}
+                  {noAiMode ? "Instructions" : "AI Assistant"}
                 </p>
               </div>
 
@@ -472,20 +458,24 @@ export default function SuggestionsPage({
                 ref={chatScrollRef}
                 className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3"
               >
-                {noAiMode ? (
-                  <div className="flex flex-col items-center justify-center h-full pt-8 gap-3 text-center px-4">
-                    <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
-                      Write freely using your own ideas. There are no AI suggestions for this task.
-                    </p>
-                  </div>
-                ) : suggestionsLoading && !messagesInitialized ? (
-                  <div className="flex flex-col items-center gap-2 pt-6">
-                    <div className="w-5 h-5 rounded-full border-2 border-[var(--sage-light)]/40 border-t-[var(--sage)] animate-spin" />
-                    <p className="text-xs text-[var(--warm-gray)]">
-                      {provocateurActive ? "Preparing challenge…" : "Generating suggestions…"}
-                    </p>
-                  </div>
-                ) : suggestionsError ? (
+                {/* Interface instructions — shown at top for all conditions */}
+                <div className="text-xs text-[var(--warm-gray)]/80 bg-[var(--sage-light)]/10 rounded-xl px-3 py-2.5 leading-relaxed space-y-1">
+                  <p>Below you see four areas:</p>
+                  <ul className="list-disc list-inside space-y-0.5 ml-1">
+                    <li><strong>Top left</strong> (here) — {noAiMode ? "Task instructions" : "AI assistant — ask the AI for creative help"}</li>
+                    <li><strong>Bottom left</strong> — Time limit for this task</li>
+                    <li><strong>Top right</strong> — Task instruction — read what you need to do</li>
+                    <li><strong>Bottom right</strong> — Writing space — write your response here</li>
+                  </ul>
+                  {noAiMode ? (
+                    <p className="mt-1">There is no AI assistant for this task. Write freely using your own ideas.</p>
+                  ) : (
+                    <p className="mt-1">You may use the AI assistant at any time by typing a message below.</p>
+                  )}
+                </div>
+
+                {/* Chat messages or empty state */}
+                {noAiMode ? null : suggestionsError ? (
                   <p className="text-xs text-red-500 break-all">{suggestionsError}</p>
                 ) : (
                   messages.map((msg) => renderMessage(msg))
@@ -506,7 +496,7 @@ export default function SuggestionsPage({
                     value={chatReply}
                     onChange={(e) => setChatReply(e.target.value)}
                     onKeyDown={handleChatKeyDown}
-                    placeholder="Reply to AI (optional)…"
+                    placeholder="Ask AI for creative suggestions…"
                     rows={2}
                     className="
                       flex-1 rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
@@ -544,7 +534,7 @@ export default function SuggestionsPage({
                 {minutes}:{seconds}
               </p>
               <p className="text-xs text-[var(--warm-gray)] mt-1">
-                {timeExpired ? "Time is up. Submit your current response." : "remaining"}
+                {timeExpired ? "Time is up — please submit your current response." : "remaining"}
               </p>
             </div>
           </div>
@@ -559,7 +549,7 @@ export default function SuggestionsPage({
                   <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
                     {taskType === "story" ? "Short Story Task" : "Creative Metaphor Task"}
                   </p>
-                  <p className="text-sm font-semibold text-[var(--warm-brown)]">Task prompt</p>
+                  <p className="text-sm font-semibold text-[var(--warm-brown)]">Task instruction</p>
                 </div>
               </div>
               {promptError ? (
@@ -586,11 +576,17 @@ export default function SuggestionsPage({
                 </>
               ) : (
                 <>
+                  <p className="text-sm text-[var(--warm-gray)] leading-relaxed mb-2">
+                    Below is a sentence with two blanks. Your task is to fill in both blanks with words or short phrases to create a creative metaphor.
+                  </p>
+                  <p className="text-sm text-[var(--warm-gray)]/70 italic mb-3">
+                    Example: &quot;Memory is a bucket because it can be deep, yet sometimes comes up empty.&quot;
+                  </p>
+                  <p className="text-sm text-[var(--warm-gray)] leading-relaxed mb-2">
+                    Now, complete the following metaphor as creatively as possible:
+                  </p>
                   <p className="text-lg font-medium text-[var(--warm-brown)]">
                     {prompt.metaphor_prompt as string}
-                  </p>
-                  <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
-                    {prompt.instruction as string}
                   </p>
                 </>
               )}

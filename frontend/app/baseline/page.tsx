@@ -51,87 +51,8 @@ type Block = {
   items: BaselineItem[];
 };
 
+// Order: Demographics → control variables (NFC, IE-4, AI use, writing exp) → CSE
 const BLOCKS: Block[] = [
-  {
-    id: "nfc",
-    title: "Need for Cognition",
-    description: "Please indicate how strongly you agree or disagree with the following statements.",
-    items: [
-      { key: "nfc_prefer", label: "I prefer tasks that require careful thinking.", type: "scale" },
-      { key: "nfc_enjoy", label: "I enjoy working through complex problems.", type: "scale" },
-      { key: "nfc_deep", label: "I would rather think deeply about an issue than rely on a quick answer.", type: "scale" },
-      { key: "nfc_satisfaction", label: "I find satisfaction in effortful thinking.", type: "scale" },
-      { key: "nfc_challenge", label: "I like situations that require me to evaluate alternatives carefully.", type: "scale" },
-      { key: "nfc_prefer_challenge", label: "I prefer tasks that challenge the way I think.", type: "scale" },
-    ],
-  },
-  {
-    id: "loc",
-    title: "Locus of Control",
-    description: "Please indicate how strongly you agree or disagree with the following statements.",
-    items: [
-      { key: "loc_effort", label: "My performance in demanding tasks usually depends on my own effort.", type: "scale" },
-      { key: "loc_welldo", label: "When I do well on a task, it is usually because of what I did.", type: "scale" },
-      { key: "loc_influence", label: "I can usually influence the quality of my outcomes through my own decisions.", type: "scale" },
-      { key: "loc_outside_control", label: "Success in difficult tasks is often outside my control.", type: "scale" },
-      { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' for this item.", type: "scale" },
-      { key: "loc_choices", label: "The choices I make usually have an important effect on the results I achieve.", type: "scale" },
-      { key: "loc_change_approach", label: "I can usually improve an outcome if I change my approach.", type: "scale" },
-    ],
-  },
-  {
-    id: "ai_use",
-    title: "Prior AI Use",
-    description: "Please rate your experience with generative AI tools (e.g., ChatGPT).",
-    items: [
-      {
-        key: "ai_freq",
-        label: "How often do you use generative AI tools (e.g., ChatGPT)?",
-        type: "scale",
-        lowLabel: "Never",
-        highLabel: "Almost always",
-      },
-      {
-        key: "ai_expertise",
-        label: "How would you rate your overall expertise with generative AI tools?",
-        type: "scale",
-        lowLabel: "Novice",
-        highLabel: "Expert",
-      },
-    ],
-  },
-  {
-    id: "writing_exp",
-    title: "Creative Writing Experience",
-    description: "Please rate your creative writing experience.",
-    items: [
-      {
-        key: "write_exp",
-        label: "How much creative writing experience do you have?",
-        type: "scale",
-        lowLabel: "No experience",
-        highLabel: "Very experienced",
-      },
-      {
-        key: "write_confidence",
-        label: "How confident are you in your creative writing ability?",
-        type: "scale",
-        lowLabel: "Not at all confident",
-        highLabel: "Extremely confident",
-      },
-    ],
-  },
-  {
-    id: "cse",
-    title: "Creative Confidence",
-    description: "Based on your current experience, please indicate how strongly you agree or disagree with the following statements.",
-    items: [
-      { key: "cse_generate", label: "Based on my current experience, I am capable of generating creative ideas in writing tasks.", type: "scale" },
-      { key: "cse_develop", label: "Based on my current experience, I can develop an ordinary idea into something more original.", type: "scale" },
-      { key: "cse_confident", label: "Based on my current experience, I am confident in my ability to produce imaginative written content.", type: "scale" },
-      { key: "cse_improve", label: "Based on my current experience, I can improve a weak creative idea into a stronger one.", type: "scale" },
-    ],
-  },
   {
     id: "demographics",
     title: "Background Information",
@@ -141,24 +62,13 @@ const BLOCKS: Block[] = [
         key: "demo_age",
         label: "What is your age?",
         type: "select",
-        options: [
-          "18-24",
-          "25-34",
-          "35-44",
-          "45-54",
-          "55-64",
-          "65 or older",
-          "Prefer not to say",
-        ],
+        options: ["18-24", "25-34", "35-44", "45-54", "55-64", "65 or older", "Prefer not to say"],
       },
       {
         key: "demo_gender",
         label: "What is your gender?",
         type: "select",
-        options: [
-          "Female",
-          "Male",
-        ],
+        options: ["Female", "Male", "Prefer not to say"],
       },
       {
         key: "demo_education",
@@ -172,20 +82,6 @@ const BLOCKS: Block[] = [
           "Bachelor's degree",
           "Master's degree",
           "Doctoral or professional degree",
-          "Prefer not to say",
-        ],
-      },
-      {
-        key: "demo_income",
-        label: "What is your annual personal income?",
-        type: "select",
-        options: [
-          "Less than $25,000",
-          "$25,000-$49,999",
-          "$50,000-$74,999",
-          "$75,000-$99,999",
-          "$100,000-$149,999",
-          "$150,000 or more",
           "Prefer not to say",
         ],
       },
@@ -210,13 +106,7 @@ const BLOCKS: Block[] = [
         key: "demo_english",
         label: "What is your English proficiency level?",
         type: "select",
-        options: [
-          "Beginner",
-          "Proficient",
-          "Advanced",
-          "Native speaker",
-          "Prefer not to say",
-        ],
+        options: ["Beginner", "Proficient", "Advanced", "Native speaker", "Prefer not to say"],
       },
       {
         key: "demo_prior_ai_study",
@@ -224,6 +114,86 @@ const BLOCKS: Block[] = [
         type: "select",
         options: ["Yes", "No", "Not sure"],
       },
+    ],
+  },
+  {
+    id: "nfc",
+    title: "Need for Cognition",
+    description: "Please indicate how well each statement describes you.",
+    items: [
+      { key: "nfc_prefer", label: "I prefer tasks that require careful thinking.", type: "scale" },
+      { key: "nfc_enjoy", label: "I enjoy working through complex problems.", type: "scale" },
+      { key: "nfc_deep", label: "I would rather think deeply about an issue than rely on a quick answer.", type: "scale" },
+      { key: "nfc_satisfaction", label: "I find satisfaction in effortful thinking.", type: "scale" },
+      { key: "nfc_challenge", label: "I like situations that require me to evaluate alternatives carefully.", type: "scale" },
+      { key: "nfc_prefer_challenge", label: "I prefer tasks that challenge the way I think.", type: "scale" },
+    ],
+  },
+  {
+    // IE-4: Internal–External Locus of Control Short Scale (Nießen et al., 2022, PLOS ONE)
+    // 5-point scale: 1 = Does not apply at all, 5 = Applies fully
+    id: "ie4",
+    title: "Personal Beliefs",
+    description: "Please indicate how well each statement applies to you.",
+    items: [
+      { key: "ie4_int1", label: "I\u2019m my own boss.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
+      { key: "ie4_int2", label: "If I work hard, I will succeed.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
+      { key: "ie4_ext1", label: "Whether at work or in my private life: what I do is mainly determined by others.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
+      { key: "attn_baseline", label: "This is an attention check. Please select the second option from the right.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
+      { key: "ie4_ext2", label: "Fate often gets in the way of my plans.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
+    ],
+  },
+  {
+    id: "ai_use",
+    title: "Prior AI Use",
+    description: "Please rate your experience with generative AI tools (e.g. ChatGPT, Claude).",
+    items: [
+      {
+        key: "ai_freq",
+        label: "How often do you use generative AI tools (e.g. ChatGPT, Claude)?",
+        type: "scale",
+        lowLabel: "Never",
+        highLabel: "Almost always",
+      },
+      {
+        key: "ai_expertise",
+        label: "How would you rate your overall expertise with generative AI tools?",
+        type: "scale",
+        lowLabel: "Novice",
+        highLabel: "Expert",
+      },
+    ],
+  },
+  {
+    id: "writing_exp",
+    title: "Creative Writing Experience",
+    description: "Please rate your creative writing background.",
+    items: [
+      {
+        key: "write_exp",
+        label: "How much creative writing experience do you have?",
+        type: "scale",
+        lowLabel: "No experience",
+        highLabel: "Very experienced",
+      },
+      {
+        key: "write_confidence",
+        label: "How confident are you in your creative writing ability?",
+        type: "scale",
+        lowLabel: "Not at all confident",
+        highLabel: "Extremely confident",
+      },
+    ],
+  },
+  {
+    id: "cse",
+    title: "Creative Confidence",
+    description: "Please indicate how strongly you agree or disagree with each statement.",
+    items: [
+      { key: "cse_generate", label: "Based on my current experience, I am capable of generating creative ideas in writing tasks.", type: "scale" },
+      { key: "cse_develop", label: "Based on my current experience, I can develop an ordinary idea into something more original.", type: "scale" },
+      { key: "cse_confident", label: "Based on my current experience, I am confident in my ability to produce imaginative written content.", type: "scale" },
+      { key: "cse_improve", label: "Based on my current experience, I can improve a weak creative idea into a stronger one.", type: "scale" },
     ],
   },
 ];

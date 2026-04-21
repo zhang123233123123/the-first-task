@@ -85,8 +85,15 @@ def get_general_provocation(task_type: str, prompt_text: str, suggestions: list[
     """Generate one task-level provocateur card rather than suggestion-specific cards."""
     system_prompt = (
         "You are a creative critic in a research experiment. "
-        "Write one short provocation card that challenges assumptions and opens new directions. "
-        "Be constructive, specific, and intellectually stimulating — not insulting."
+        "Your role is to challenge the participant's thinking and guide them to explore deeper, "
+        "but you must NEVER provide a direct answer, solution, or completed creative work. "
+        "Only provoke reflection and open new angles.\n\n"
+        "CRITICAL RULES:\n"
+        "1. Your comments must be DIRECTLY related to the specific task prompt (the given words or metaphor). "
+        "Do NOT assume what direction the participant will take.\n"
+        "2. Do NOT write any story, metaphor, or creative content for them.\n"
+        "3. Only highlight potential pitfalls, suggest unexplored angles, and ask thought-provoking questions.\n"
+        "4. Be constructive, specific, and intellectually stimulating — not insulting."
     )
 
     suggestions_text = "\n".join(
@@ -95,12 +102,13 @@ def get_general_provocation(task_type: str, prompt_text: str, suggestions: list[
 
     user_prompt = (
         f"This participant is working on a {task_type} task.\n"
-        f"Prompt: {prompt_text}\n\n"
+        f"Task prompt: {prompt_text}\n\n"
         f"Here are the AI directions they can see:\n{suggestions_text}\n\n"
-        "Write one provocateur card for the task as a whole with exactly three parts:\n"
-        "- Risk: one sentence identifying a cliché, weak assumption, or limitation\n"
-        "- Alternative: one sentence proposing a substantially different direction\n"
-        "- Question: one question pushing deeper rethinking\n\n"
+        "Write one provocateur card with exactly three parts:\n"
+        "- Risk: one sentence identifying a common pitfall or cliché specific to THIS task prompt\n"
+        "- Alternative: one sentence hinting at an unexplored angle (without giving the answer)\n"
+        "- Question: one open-ended question that pushes the participant to think differently\n\n"
+        "Remember: guide their thinking, do NOT write the answer for them.\n"
         "Format as JSON: {\"risk\": \"...\", \"alternative\": \"...\", \"question\": \"...\"}"
     )
 
@@ -129,7 +137,14 @@ def get_followup_provocation(task_type: str, user_reply: str, original_question:
         "You are a creative critic in a research experiment. "
         "You previously challenged a participant with a provocation question. They have replied. "
         "Generate a new provocation card that builds on their reply and pushes their thinking further. "
-        "Be constructive, specific, and intellectually stimulating."
+        "You must NEVER provide a direct answer, solution, or completed creative work. "
+        "Only provoke reflection and open new angles.\n\n"
+        "CRITICAL RULES:\n"
+        "1. Your comments must be DIRECTLY related to the specific task prompt and the participant's reply. "
+        "Do NOT introduce unrelated topics.\n"
+        "2. Do NOT write any story, metaphor, or creative content for them.\n"
+        "3. Only highlight assumptions, suggest unexplored angles, and ask thought-provoking questions.\n"
+        "4. Be constructive, specific, and intellectually stimulating — not insulting."
     )
 
     user_prompt = (
@@ -167,14 +182,19 @@ def get_basic_ai_followup(task_type: str, user_message: str, task_context: str) 
     system_prompt = (
         "You are a helpful creative writing assistant in a research experiment. "
         "Respond concisely and supportively to the participant's message. "
-        "Help them develop their creative idea — offer a brief suggestion or encouragement. "
-        "Keep your response under 80 words."
+        "You must NEVER provide a direct answer, completed story, finished metaphor, or any creative content. "
+        "Only offer guidance, encouragement, and thought-provoking directions.\n\n"
+        "CRITICAL RULES:\n"
+        "1. Your response must be DIRECTLY related to the specific task prompt the participant is working on.\n"
+        "2. Do NOT write any story, metaphor, or creative content for them.\n"
+        "3. Only suggest directions, ask clarifying questions, or encourage deeper exploration.\n"
+        "4. Keep your response under 80 words."
     )
     user_prompt = (
         f"The participant is working on a {task_type} creative writing task.\n"
         f"Task context: {task_context}\n\n"
         f"Their message: {user_message}\n\n"
-        "Give a short, helpful response with a creative suggestion they can use."
+        "Give a short, guiding response that helps them think deeper — do NOT write any creative content for them."
     )
     response = client.chat.completions.create(
         model="deepseek-chat",

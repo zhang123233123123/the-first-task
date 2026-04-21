@@ -1,4 +1,5 @@
-// Root route is handled by middleware (redirects to /consent)
+import { redirect } from "next/navigation";
+
 export default function Home() {
-  return null;
+  redirect("/consent");
 }

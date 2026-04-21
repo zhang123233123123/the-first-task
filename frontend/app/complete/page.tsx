@@ -37,13 +37,13 @@ export default function CompletePage() {
             Thank you so much
           </h1>
           <p className="text-[var(--warm-gray)] text-sm leading-relaxed">
-            You've completed the study. Your responses have been saved and will help us better understand how people create alongside AI.
+            You have completed the study. Your responses have been saved and will help us better understand how people create alongside AI.
           </p>
         </div>
 
         <div className="glass-card p-5 space-y-2">
           <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
-            <strong className="text-[var(--warm-brown)]">Study debrief:</strong> This study examined whether specific interface and dialogue features — called "provocateur" and "friction" — can help people stay creatively engaged when working with AI. Your participation contributes to research on human-AI collaboration and creativity.
+            <strong className="text-[var(--warm-brown)]">Study debrief:</strong> This study examined whether specific interface features — designed to encourage reflection and challenge assumptions — can help people stay creatively engaged when working with AI. Your participation contributes to research on human–AI collaboration and creativity.
           </p>
         </div>
 

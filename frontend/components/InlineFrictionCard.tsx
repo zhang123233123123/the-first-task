@@ -99,7 +99,7 @@ export function InlineFrictionCard({
         <div>
           <h3 className="text-sm font-semibold text-[var(--warm-brown)]">Take a moment</h3>
           <p className="text-xs text-[var(--warm-gray)]">
-            Reflect on your current direction before continuing
+            Reflect on your current direction before continuing.
           </p>
         </div>
       </div>
