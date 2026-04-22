@@ -104,13 +104,13 @@ export default function PilotEntryPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await api.initParticipant();
+      const result = await api.initParticipant(undefined, "pilot");
       const pid = result.participant_id;
       await api.recordConsent(pid);
 
       // Save demographics as baseline
       const elapsed = (Date.now() - (startTime.current ?? Date.now())) / 1000;
-      const assignResult = await api.saveBaseline(pid, responses as Record<string, unknown>, elapsed);
+      const assignResult = await api.saveBaseline(pid, responses as Record<string, unknown>, elapsed, true);
 
       setParticipant({
         participantId: pid,

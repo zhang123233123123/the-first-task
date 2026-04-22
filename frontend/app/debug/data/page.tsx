@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Database, Filter, RefreshCw, Search } from "lucide-react";
+import { Database, Download, Filter, RefreshCw, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -12,6 +12,7 @@ import {
   type DebugParticipantSummary,
 } from "@/lib/api";
 
+type StudyModeFilter = "all" | "main" | "pilot";
 type CompletedFilter = "all" | "true" | "false";
 type SortOption =
   | "created_at_desc"
@@ -38,6 +39,7 @@ const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
 
 export default function DebugDataPage() {
   const [query, setQuery] = useState("");
+  const [studyMode, setStudyMode] = useState<StudyModeFilter>("all");
   const [condition, setCondition] = useState<(typeof CONDITION_OPTIONS)[number]>("all");
   const [completed, setCompleted] = useState<CompletedFilter>("all");
   const [sort, setSort] = useState<SortOption>("created_at_desc");
@@ -61,6 +63,7 @@ export default function DebugDataPage() {
         condition: condition === "all" ? undefined : condition,
         completed:
           completed === "all" ? undefined : completed === "true",
+        study_mode: studyMode === "all" ? undefined : studyMode,
         sort,
       })
       .then((result) => {
@@ -80,7 +83,7 @@ export default function DebugDataPage() {
     return () => {
       cancelled = true;
     };
-  }, [query, condition, completed, sort]);
+  }, [query, studyMode, condition, completed, sort]);
 
   useEffect(() => {
     if (!selectedParticipantId) return;
@@ -135,10 +138,14 @@ export default function DebugDataPage() {
               </div>
             </div>
 
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
               <Link href="/debug/conditions" className="inline-flex">
-                <Button size="md">Open Condition Launcher</Button>
+                <Button size="md">Condition Launcher</Button>
               </Link>
+              <Link href="/debug/pilot" className="inline-flex">
+                <Button size="md">Pilot Launcher</Button>
+              </Link>
+              <ExportDropdown studyMode={studyMode} />
             </div>
           </div>
 
@@ -163,7 +170,7 @@ export default function DebugDataPage() {
               </div>
             </div>
 
-            <div className="grid gap-3 border-b border-[var(--sage-light)]/15 px-5 py-4 md:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+            <div className="grid gap-3 border-b border-[var(--sage-light)]/15 px-5 py-4 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
               <label className="space-y-1 text-sm text-[var(--warm-gray)]">
                 <span className="text-xs font-medium uppercase tracking-wide">Search</span>
                 <div className="relative">
@@ -179,6 +186,23 @@ export default function DebugDataPage() {
                     className="w-full rounded-2xl border border-[var(--sage-light)]/35 bg-white/70 py-2 pl-10 pr-3 text-sm text-[var(--warm-brown)] outline-none transition-all focus:ring-2 focus:ring-[var(--sage)]/30"
                   />
                 </div>
+              </label>
+
+              <label className="space-y-1 text-sm text-[var(--warm-gray)]">
+                <span className="text-xs font-medium uppercase tracking-wide">Mode</span>
+                <select
+                  value={studyMode}
+                  onChange={(e) => {
+                    setListLoading(true);
+                    setListError(null);
+                    setStudyMode(e.target.value as StudyModeFilter);
+                  }}
+                  className="w-full rounded-2xl border border-[var(--sage-light)]/35 bg-white/70 px-3 py-2 text-sm text-[var(--warm-brown)] outline-none transition-all focus:ring-2 focus:ring-[var(--sage)]/30"
+                >
+                  <option value="all">All modes</option>
+                  <option value="main">Main study</option>
+                  <option value="pilot">Pilot</option>
+                </select>
               </label>
 
               <label className="space-y-1 text-sm text-[var(--warm-gray)]">
@@ -294,6 +318,7 @@ export default function DebugDataPage() {
                             {participant.participant_id}
                           </p>
                           <div className="flex flex-wrap gap-2">
+                            <Tag>{participant.study_mode ?? "main"}</Tag>
                             <Tag>{participant.condition_id ?? "unassigned"}</Tag>
                             <Tag>{participant.completed ? "completed" : "in progress"}</Tag>
                             {participant.provocateur_flag && <Tag>provocateur</Tag>}
@@ -347,6 +372,51 @@ export default function DebugDataPage() {
   );
 }
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+
+function ExportDropdown({ studyMode }: { studyMode: StudyModeFilter }) {
+  const [open, setOpen] = useState(false);
+
+  const modeParam = studyMode === "all" ? "" : `study_mode=${studyMode}`;
+
+  const exportLinks = [
+    { label: "All data (JSON)", href: `${API_BASE}/debug/data/export/json${modeParam ? `?${modeParam}` : ""}` },
+    { label: "Participants (CSV)", href: `${API_BASE}/debug/data/export/csv?table=participants${modeParam ? `&${modeParam}` : ""}` },
+    { label: "Baseline (CSV)", href: `${API_BASE}/debug/data/export/csv?table=baseline${modeParam ? `&${modeParam}` : ""}` },
+    { label: "Task Sessions (CSV)", href: `${API_BASE}/debug/data/export/csv?table=sessions${modeParam ? `&${modeParam}` : ""}` },
+    { label: "Post-task (CSV)", href: `${API_BASE}/debug/data/export/csv?table=posttask${modeParam ? `&${modeParam}` : ""}` },
+  ];
+
+  return (
+    <div className="relative">
+      <Button size="md" onClick={() => setOpen((v) => !v)}>
+        <Download className="mr-2 h-4 w-4" />
+        Export
+      </Button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full z-20 mt-2 w-56 rounded-2xl border border-[var(--sage-light)]/40 bg-white/95 shadow-lg backdrop-blur-sm">
+            <div className="px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-[var(--warm-gray)]">
+              {studyMode === "all" ? "All modes" : studyMode === "main" ? "Main study only" : "Pilot only"}
+            </div>
+            {exportLinks.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                onClick={() => setOpen(false)}
+                className="block px-3 py-2 text-sm text-[var(--warm-brown)] hover:bg-[var(--sage-light)]/15 transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function ParticipantDetailView({ detail }: { detail: DebugParticipantDetail }) {
   const taskOne = detail.task_sessions.find((item) => item.task_round === 1) ?? null;
   const taskTwo = detail.task_sessions.find((item) => item.task_round === 2) ?? null;
@@ -361,6 +431,7 @@ function ParticipantDetailView({ detail }: { detail: DebugParticipantDetail }) {
         </h3>
         <div className="mt-3 grid gap-2 text-sm text-[var(--warm-brown)] sm:grid-cols-2">
           <DetailRow label="Participant ID" value={detail.participant.participant_id} mono />
+          <DetailRow label="Study mode" value={detail.participant.study_mode ?? "main"} />
           <DetailRow label="Condition" value={detail.participant.condition_id ?? "unassigned"} />
           <DetailRow label="Task order" value={formatTaskOrder(detail.participant.task_order)} />
           <DetailRow label="Current page" value={detail.participant.current_page ?? "unknown"} />

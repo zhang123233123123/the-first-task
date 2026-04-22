@@ -15,6 +15,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 export interface DebugParticipantSummary {
   participant_id: string;
   condition_id: string | null;
+  study_mode: string;
   provocateur_flag: boolean;
   friction_flag: boolean;
   task_order: string[] | null;
@@ -66,6 +67,7 @@ export interface DebugParticipantDetail {
   participant: {
     participant_id: string;
     condition_id: string | null;
+    study_mode: string;
     provocateur_flag: boolean;
     friction_flag: boolean;
     task_order: string[] | null;
@@ -85,7 +87,7 @@ export interface DebugParticipantDetail {
 
 // ── Participants ──────────────────────────────────────────────
 export const api = {
-  initParticipant: (condition?: string) =>
+  initParticipant: (condition?: string, studyMode: string = "main") =>
     request<{
       participant_id: string;
       condition_id: string | null;
@@ -94,7 +96,7 @@ export const api = {
       task_order: string[] | null;
     }>("/participants/init", {
       method: "POST",
-      body: JSON.stringify({ condition: condition ?? null }),
+      body: JSON.stringify({ condition: condition ?? null, study_mode: studyMode }),
     }),
 
   getParticipant: (id: string) =>
@@ -127,12 +129,14 @@ export const api = {
     q?: string;
     condition?: string;
     completed?: boolean;
+    study_mode?: string;
     sort?: "created_at_desc" | "created_at_asc" | "participant_id_asc" | "participant_id_desc";
   }) => {
     const searchParams = new URLSearchParams();
     if (params?.q) searchParams.set("q", params.q);
     if (params?.condition) searchParams.set("condition", params.condition);
     if (params?.completed != null) searchParams.set("completed", String(params.completed));
+    if (params?.study_mode) searchParams.set("study_mode", params.study_mode);
     if (params?.sort) searchParams.set("sort", params.sort);
     const query = searchParams.toString();
     return request<{ count: number; items: DebugParticipantSummary[] }>(
@@ -161,7 +165,7 @@ export const api = {
     }>(`/suggestions/${id}/${round}`),
 
   // ── Responses ───────────────────────────────────────────────
-  saveBaseline: (participantId: string, responses: Record<string, unknown>, completionTimeSec: number) =>
+  saveBaseline: (participantId: string, responses: Record<string, unknown>, completionTimeSec: number, pilot: boolean = false) =>
     request<{
       status: string;
       condition_id?: string;
@@ -175,6 +179,7 @@ export const api = {
         participant_id: participantId,
         responses,
         completion_time_seconds: completionTimeSec,
+        pilot,
       }),
     }),
 

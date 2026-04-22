@@ -20,6 +20,7 @@ class BaselinePayload(BaseModel):
     participant_id: str
     responses: dict[str, Any]
     completion_time_seconds: float
+    pilot: bool = False
 
 
 class GatePayload(BaseModel):
@@ -80,7 +81,7 @@ def save_baseline(payload: BaselinePayload, db: Session = Depends(get_db)):
     assignment_result = {}
     if p and p.condition_id is None:
         stratum = compute_stratum(payload.responses)
-        condition = assign_condition_minimized(db, stratum)
+        condition = assign_condition_minimized(db, stratum, pilot=payload.pilot)
         order = assign_task_order_balanced(db, condition)
         p.stratum = stratum
         p.condition_id = condition
@@ -157,7 +158,12 @@ def save_post_task(payload: PostTaskPayload, db: Session = Depends(get_db)):
         PostTaskResponse.task_round == payload.task_round,
     ).first()
 
-    session = _get_session_or_404(db, payload.participant_id, payload.task_round)
+    # Round 0 = pilot manipulation check (no TaskSession exists)
+    if payload.task_round == 0:
+        task_type = "pilot_check"
+    else:
+        session = _get_session_or_404(db, payload.participant_id, payload.task_round)
+        task_type = session.task_type
 
     if existing:
         existing.responses = payload.responses
@@ -166,7 +172,7 @@ def save_post_task(payload: PostTaskPayload, db: Session = Depends(get_db)):
         db.add(PostTaskResponse(
             participant_id=payload.participant_id,
             task_round=payload.task_round,
-            task_type=session.task_type,
+            task_type=task_type,
             responses=payload.responses,
             completion_time_seconds=payload.completion_time_seconds,
         ))

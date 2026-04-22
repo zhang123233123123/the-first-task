@@ -9,6 +9,9 @@ class Participant(Base):
     id = Column(Integer, primary_key=True, index=True)
     participant_id = Column(String, unique=True, index=True)
 
+    # Study mode
+    study_mode = Column(String, default="main")    # "main" | "pilot"
+
     # Condition assignment
     condition_id = Column(String, nullable=True)   # provocateur / friction / prov_then_fric / fric_then_prov
     provocateur_flag = Column(Boolean, default=False)

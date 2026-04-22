@@ -24,6 +24,7 @@ class ProgressPayload(BaseModel):
 
 class InitPayload(BaseModel):
     condition: str | None = None  # if None, assign randomly
+    study_mode: str = "main"     # "main" | "pilot"
 
 
 @router.post("/init")
@@ -47,6 +48,7 @@ def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends
             provocateur_flag=provocateur_flag,
             friction_flag=friction_flag,
             task_order=task_order,
+            study_mode=payload.study_mode,
             current_page="consent",
         )
     else:
@@ -59,6 +61,7 @@ def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends
             provocateur_flag=False,
             friction_flag=False,
             task_order=None,
+            study_mode=payload.study_mode,
             current_page="consent",
         )
 

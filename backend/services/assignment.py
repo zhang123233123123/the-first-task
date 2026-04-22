@@ -5,6 +5,7 @@ from models import Participant
 
 CSE_THRESHOLD = 3.5   # 1-5 scale; >= 3.5 → high stratum
 CONDITIONS = ["no_ai", "basic_ai", "provocateur", "friction", "prov_then_fric", "fric_then_prov"]
+PILOT_CONDITIONS = ["basic_ai", "friction", "provocateur"]
 TASK_ORDERS = [["story", "metaphor"], ["metaphor", "story"]]
 
 
@@ -17,13 +18,17 @@ def compute_stratum(responses: dict) -> str:
     return "high" if (sum(vals) / len(vals)) >= CSE_THRESHOLD else "low"
 
 
-def assign_condition_minimized(db, stratum: str) -> str:
-    """Return condition with fewest participants in this stratum; random tie-break."""
-    counts = {c: 0 for c in CONDITIONS}
+def assign_condition_minimized(db, stratum: str, pilot: bool = False) -> str:
+    """Return condition with fewest participants in this stratum; random tie-break.
+
+    pilot=True → only assign from PILOT_CONDITIONS (basic_ai, friction, provocateur).
+    """
+    pool = PILOT_CONDITIONS if pilot else CONDITIONS
+    counts = {c: 0 for c in pool}
     rows = (
         db.query(Participant.condition_id, func.count(Participant.id))
         .filter(
-            Participant.condition_id.in_(CONDITIONS),
+            Participant.condition_id.in_(pool),
             Participant.stratum == stratum,
         )
         .group_by(Participant.condition_id)
