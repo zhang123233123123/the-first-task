@@ -184,7 +184,6 @@ const BLOCKS: Block[] = [
       { key: "cse_generate", label: "Based on my current experience, I am capable of generating creative ideas in writing tasks.", type: "scale" },
       { key: "cse_develop", label: "Based on my current experience, I can develop an ordinary idea into something more original.", type: "scale" },
       { key: "cse_confident", label: "Based on my current experience, I am confident in my ability to produce imaginative written content.", type: "scale" },
-      { key: "cse_improve", label: "Based on my current experience, I can improve a weak creative idea into a stronger one.", type: "scale" },
     ],
   },
 ];
