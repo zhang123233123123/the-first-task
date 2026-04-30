@@ -36,24 +36,27 @@ function ConsentContent() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Read condition from URL — e.g. /consent?condition=no_ai
+  // Read condition and pilot flag from URL
+  // e.g. /consent?condition=no_ai  or  /consent?pilot=true
   const rawCondition = searchParams.get("condition");
   const condition = VALID_CONDITIONS.includes(rawCondition as Condition)
     ? (rawCondition as Condition)
     : null;
+  const isPilot = searchParams.get("pilot") === "true";
 
   const handleContinue = async () => {
     if (!agreed || loading) return;
     setLoading(true);
     setError(null);
     try {
-      const data = await api.initParticipant(condition ?? undefined);
+      const data = await api.initParticipant(condition ?? undefined, isPilot);
       setParticipant({
         participantId: data.participant_id,
         conditionId: data.condition_id,
         provocateurFlag: data.provocateur_flag,
         frictionFlag: data.friction_flag,
         taskOrder: data.task_order,
+        isPilot: data.is_pilot,
       });
       await api.recordConsent(data.participant_id);
       router.push("/instructions");

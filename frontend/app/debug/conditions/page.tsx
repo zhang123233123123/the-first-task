@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { useStore } from "@/lib/store";
 import { api } from "@/lib/api";
+import { DebugGuard } from "@/components/DebugGuard";
 
 const CONDITIONS = [
   {
@@ -43,6 +44,16 @@ const CONDITIONS = [
 type Condition = (typeof CONDITIONS)[number]["id"];
 
 export default function DebugConditionsPage() {
+  return (
+    <Suspense>
+      <DebugGuard>
+        <DebugConditionsContent />
+      </DebugGuard>
+    </Suspense>
+  );
+}
+
+function DebugConditionsContent() {
   const router = useRouter();
   const setParticipant = useStore((s) => s.setParticipant);
   const [loading, setLoading] = useState<Condition | null>(null);

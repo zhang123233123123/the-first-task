@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Database, Download, Filter, RefreshCw, Search } from "lucide-react";
+import { DebugGuard } from "@/components/DebugGuard";
 
 import { Button } from "@/components/ui/Button";
 import {
@@ -38,6 +39,16 @@ const SORT_OPTIONS: Array<{ value: SortOption; label: string }> = [
 ];
 
 export default function DebugDataPage() {
+  return (
+    <Suspense>
+      <DebugGuard>
+        <DebugDataContent />
+      </DebugGuard>
+    </Suspense>
+  );
+}
+
+function DebugDataContent() {
   const [query, setQuery] = useState("");
   const [studyMode, setStudyMode] = useState<StudyModeFilter>("all");
   const [condition, setCondition] = useState<(typeof CONDITION_OPTIONS)[number]>("all");

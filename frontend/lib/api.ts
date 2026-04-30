@@ -87,16 +87,17 @@ export interface DebugParticipantDetail {
 
 // ── Participants ──────────────────────────────────────────────
 export const api = {
-  initParticipant: (condition?: string, studyMode: string = "main") =>
+  initParticipant: (condition?: string, isPilot?: boolean) =>
     request<{
       participant_id: string;
       condition_id: string | null;
       provocateur_flag: boolean;
       friction_flag: boolean;
       task_order: string[] | null;
+      is_pilot: boolean;
     }>("/participants/init", {
       method: "POST",
-      body: JSON.stringify({ condition: condition ?? null, study_mode: studyMode }),
+      body: JSON.stringify({ condition: condition ?? null, is_pilot: isPilot ?? false }),
     }),
 
   getParticipant: (id: string) =>

@@ -168,8 +168,8 @@ export default function SuggestionsPage({
 
   useEffect(() => {
     if (suggestionsLoading || messagesInitialized || !data) return;
+    // Messages start empty — AI responds only when user initiates chat
     setMessagesInitialized(true);
-    // No auto-populated messages — user must initiate the conversation.
   }, [suggestionsLoading, data, messagesInitialized]);
 
   // ── Friction inline trigger ───────────────────────────────
@@ -394,19 +394,23 @@ export default function SuggestionsPage({
         <div key={msg.id} id={msg.id}>
           <ChatBubble role="ai">
             <div className="space-y-2 text-sm leading-relaxed">
-              <p className="text-xs text-[var(--warm-gray)]/70 italic mb-1">
-                The AI offers a different perspective:
+              <p className="text-xs text-[var(--warm-gray)] italic border-b border-[var(--sage-light)]/30 pb-2 mb-1">
+                The chatbot below offers a different perspective on your task.
+                Consider it before continuing — you are free to agree, disagree, or ignore it.
               </p>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--peach)] block mb-0.5">Potential weakness</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--peach)] block mb-0.5">Risk</span>
+                <span className="text-xs text-[var(--warm-gray)]/70 block mb-0.5">A potential weakness in the current direction</span>
                 <span>{msg.provocation.risk}</span>
               </div>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--sage-dark)] block mb-0.5">A different direction</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--sage-dark)] block mb-0.5">Alternative</span>
+                <span className="text-xs text-[var(--warm-gray)]/70 block mb-0.5">A different angle you could explore</span>
                 <span>{msg.provocation.alternative}</span>
               </div>
               <div>
-                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--lavender)] block mb-0.5">Something to consider</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-[var(--lavender)] block mb-0.5">Question</span>
+                <span className="text-xs text-[var(--warm-gray)]/70 block mb-0.5">Something to reflect on</span>
                 <span className="italic">{msg.provocation.question}</span>
               </div>
             </div>
@@ -454,29 +458,47 @@ export default function SuggestionsPage({
                 </p>
               </div>
 
+              {/* ── Interface layout guide — shown in all conditions ── */}
+              <div className="px-4 py-2 bg-[var(--sage-light)]/10 border-b border-[var(--sage-light)]/20 flex-shrink-0 space-y-0.5">
+                <p className="text-xs text-[var(--warm-gray)]/80 leading-relaxed">
+                  <span className="font-medium text-[var(--warm-gray)]">This panel</span>
+                  {noAiMode
+                    ? " — writing guidance (no AI for this task)."
+                    : provocateurActive
+                    ? " — chatbot interaction. Use the box below to ask questions."
+                    : " — AI suggestions. Use the box below to ask follow-up questions."}
+                </p>
+                <p className="text-xs text-[var(--warm-gray)]/80 leading-relaxed">
+                  <span className="font-medium text-[var(--warm-gray)]">Right panel</span>
+                  {" — task instructions (top) and your answer space (bottom)."}
+                </p>
+              </div>
+
               <div
                 ref={chatScrollRef}
                 className="min-h-0 flex-1 overflow-y-auto p-4 space-y-3"
               >
-                {/* Interface instructions — shown at top for all conditions */}
-                <div className="text-xs text-[var(--warm-gray)]/80 bg-[var(--sage-light)]/10 rounded-xl px-3 py-2.5 leading-relaxed space-y-1">
-                  <p>Below you see four areas:</p>
-                  <ul className="list-disc list-inside space-y-0.5 ml-1">
-                    <li><strong>Top left</strong> (here) — {noAiMode ? "Task instructions" : "AI assistant — ask the AI for creative help"}</li>
-                    <li><strong>Bottom left</strong> — Time limit for this task</li>
-                    <li><strong>Top right</strong> — Task instruction — read what you need to do</li>
-                    <li><strong>Bottom right</strong> — Writing space — write your response here</li>
-                  </ul>
-                  {noAiMode ? (
-                    <p className="mt-1">There is no AI assistant for this task. Write freely using your own ideas.</p>
-                  ) : (
-                    <p className="mt-1">You may use the AI assistant at any time by typing a message below.</p>
-                  )}
-                </div>
-
-                {/* Chat messages or empty state */}
-                {noAiMode ? null : suggestionsError ? (
+                {noAiMode ? (
+                  <div className="flex flex-col items-center justify-center h-full pt-8 gap-3 text-center px-4">
+                    <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
+                      Write freely using your own ideas. There are no AI suggestions for this task.
+                    </p>
+                  </div>
+                ) : suggestionsLoading && !messagesInitialized ? (
+                  <div className="flex flex-col items-center gap-2 pt-6">
+                    <div className="w-5 h-5 rounded-full border-2 border-[var(--sage-light)]/40 border-t-[var(--sage)] animate-spin" />
+                    <p className="text-xs text-[var(--warm-gray)]">Loading…</p>
+                  </div>
+                ) : suggestionsError ? (
                   <p className="text-xs text-red-500 break-all">{suggestionsError}</p>
+                ) : messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full pt-8 gap-3 text-center px-4">
+                    <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
+                      {provocateurActive
+                        ? "Send a message below to start the conversation."
+                        : "Send a message below to get suggestions for your task."}
+                    </p>
+                  </div>
                 ) : (
                   messages.map((msg) => renderMessage(msg))
                 )}
@@ -576,14 +598,8 @@ export default function SuggestionsPage({
                 </>
               ) : (
                 <>
-                  <p className="text-sm text-[var(--warm-gray)] leading-relaxed mb-2">
-                    Below is a sentence with two blanks. Your task is to fill in both blanks with words or short phrases to create a creative metaphor.
-                  </p>
-                  <p className="text-sm text-[var(--warm-gray)]/70 italic mb-3">
-                    Example: &quot;Memory is a bucket because it can be deep, yet sometimes comes up empty.&quot;
-                  </p>
-                  <p className="text-sm text-[var(--warm-gray)] leading-relaxed mb-2">
-                    Now, complete the following metaphor as creatively as possible:
+                  <p className="text-xs text-[var(--warm-gray)] leading-relaxed">
+                    Below you see a sentence with two gaps. Fill both gaps with words or short phrases to create a creative metaphor.
                   </p>
                   <p className="text-lg font-medium text-[var(--warm-brown)]">
                     {prompt.metaphor_prompt as string}

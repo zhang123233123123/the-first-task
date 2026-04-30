@@ -40,6 +40,24 @@ def assign_condition_minimized(db, stratum: str, pilot: bool = False) -> str:
     return random.choice([c for c, n in counts.items() if n == min_cnt])
 
 
+def assign_pilot_condition_balanced(db) -> str:
+    """Assign pilot participant to the least-used pilot condition; random tie-break."""
+    counts = {c: 0 for c in PILOT_CONDITIONS}
+    rows = (
+        db.query(Participant.condition_id, func.count(Participant.id))
+        .filter(
+            Participant.condition_id.in_(PILOT_CONDITIONS),
+            Participant.is_pilot == True,  # noqa: E712
+        )
+        .group_by(Participant.condition_id)
+        .all()
+    )
+    for cond, cnt in rows:
+        counts[cond] = cnt
+    min_cnt = min(counts.values())
+    return random.choice([c for c, n in counts.items() if n == min_cnt])
+
+
 def assign_task_order_balanced(db, condition_id: str) -> list:
     """Within the condition, pick the task order used by fewer participants."""
     existing = (

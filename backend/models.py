@@ -19,6 +19,9 @@ class Participant(Base):
     task_order = Column(JSON, nullable=True)        # e.g. ["story", "metaphor"] or reversed
     stratum = Column(String, nullable=True)         # "high" | "low" — assigned after baseline
 
+    # Study type
+    is_pilot = Column(Boolean, default=False)
+
     # Consent
     consent_given = Column(Boolean, default=False)
     consent_timestamp = Column(DateTime)

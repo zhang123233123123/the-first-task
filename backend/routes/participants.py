@@ -7,6 +7,7 @@ import random
 
 from database import get_db
 from models import Participant
+from services.assignment import assign_pilot_condition_balanced, assign_task_order_balanced
 
 router = APIRouter(prefix="/participants", tags=["participants"])
 
@@ -24,19 +25,35 @@ class ProgressPayload(BaseModel):
 
 class InitPayload(BaseModel):
     condition: str | None = None  # if None, assign randomly
-    study_mode: str = "main"     # "main" | "pilot"
+    is_pilot: bool = False
 
 
 @router.post("/init")
 def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends(get_db)):
     """Create a new participant.
 
+    Pilot mode: is_pilot=True → assign immediately to one of 3 pilot conditions.
     Debug mode: condition specified → assign immediately.
     Real mode: no condition → defer assignment until after baseline (CSE scoring).
     """
     participant_id = str(uuid.uuid4())
 
-    if payload.condition and payload.condition in CONDITIONS:
+    if payload.is_pilot:
+        # Pilot mode: balanced assignment across basic_ai / friction / provocateur
+        condition = assign_pilot_condition_balanced(db)
+        task_order = assign_task_order_balanced(db, condition)
+        provocateur_flag = condition == "provocateur"
+        friction_flag = condition == "friction"
+        p = Participant(
+            participant_id=participant_id,
+            condition_id=condition,
+            provocateur_flag=provocateur_flag,
+            friction_flag=friction_flag,
+            task_order=task_order,
+            is_pilot=True,
+            current_page="consent",
+        )
+    elif payload.condition and payload.condition in CONDITIONS:
         # Debug mode: immediate assignment
         condition = payload.condition
         task_order = random.choice(TASK_ORDERS)
@@ -75,6 +92,7 @@ def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends
         "provocateur_flag": p.provocateur_flag,
         "friction_flag": p.friction_flag,
         "task_order": p.task_order,
+        "is_pilot": p.is_pilot,
     }
 
 

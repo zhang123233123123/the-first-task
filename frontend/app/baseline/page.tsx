@@ -15,7 +15,7 @@ type ScaleItem = {
   key: string;
   label: string;
   type: "scale";
-  points?: 5 | 7;
+  points?: 4 | 5 | 7;
   lowLabel?: string;
   highLabel?: string;
 };
@@ -121,17 +121,19 @@ const BLOCKS: Block[] = [
     ],
   },
   {
-    // IE-4: Internal–External Locus of Control Short Scale (Nießen et al., 2022, PLOS ONE)
-    // 5-point scale: 1 = Does not apply at all, 5 = Applies fully
-    id: "ie4",
-    title: "Personal Beliefs",
-    description: "Please indicate how well each statement applies to you.",
+    // IE-4: Internal-External Locus of Control Short Scale
+    // Kovaleva, A. (2012). IE-4: A Four-Item Measure of Internal-External Locus of Control. GESIS Working Papers 2012|18.
+    // 2 internal-control items + 2 external-control items (reversed).
+    // Used as a stable trait measure; placed pre-task as a baseline control variable.
+    id: "loc",
+    title: "Locus of Control",
+    description: "Please indicate how strongly you agree or disagree with the following statements.",
     items: [
-      { key: "ie4_int1", label: "I\u2019m my own boss.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
-      { key: "ie4_int2", label: "If I work hard, I will succeed.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
-      { key: "ie4_ext1", label: "Whether at work or in my private life: what I do is mainly determined by others.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
-      { key: "attn_baseline", label: "This is an attention check. Please select the second option from the right.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
-      { key: "ie4_ext2", label: "Fate often gets in the way of my plans.", type: "scale", points: 5, lowLabel: "Does not apply at all", highLabel: "Applies fully" },
+      { key: "loc_ie1", label: "I can bring about positive changes by my own actions.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie2", label: "How my life goes is my own doing.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' (4) for this item.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie3", label: "I have little influence on how my life turns out.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie4", label: "What I achieve in life is largely a matter of fate or luck.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
     ],
   },
   {

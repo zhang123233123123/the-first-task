@@ -10,7 +10,7 @@ interface ParticipantState {
   frictionFlag: boolean;
   taskOrder: string[];       // e.g. ["story", "metaphor"]
   currentRound: number;      // 1 or 2
-  studyMode: "main" | "pilot";
+  isPilot: boolean;
 
   setParticipant: (data: {
     participantId: string;
@@ -18,7 +18,7 @@ interface ParticipantState {
     provocateurFlag: boolean;
     frictionFlag: boolean;
     taskOrder: string[] | null;
-    studyMode?: "main" | "pilot";
+    isPilot?: boolean;
   }) => void;
   setCurrentRound: (round: number) => void;
   reset: () => void;
@@ -31,7 +31,7 @@ const initial = {
   frictionFlag: false,
   taskOrder: [],
   currentRound: 1,
-  studyMode: "main" as const,
+  isPilot: false,
 };
 
 export const useStore = create<ParticipantState>()(
@@ -45,7 +45,7 @@ export const useStore = create<ParticipantState>()(
           provocateurFlag: data.provocateurFlag,
           frictionFlag: data.frictionFlag,
           taskOrder: data.taskOrder ?? [],
-          studyMode: data.studyMode ?? "main",
+          isPilot: data.isPilot ?? false,
         }),
       setCurrentRound: (round) => set({ currentRound: round }),
       reset: () => set(initial),
