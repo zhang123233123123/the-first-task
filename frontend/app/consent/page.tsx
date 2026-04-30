@@ -124,7 +124,7 @@ function ConsentContent() {
               By continuing, you confirm that you are <strong className="text-[var(--warm-brown)]">18 years of age or older</strong> and agree to participate of your own free will.
             </p>
             <p className="text-xs text-[var(--warm-gray)]/70 pt-1">
-              Contact: zojaji@kth.se
+              Contact: potteryhrr@gmail.com
             </p>
           </div>
 

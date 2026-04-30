@@ -1,21 +1,43 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useStore } from "@/lib/store";
-import { Leaf, Heart } from "lucide-react";
+import { api } from "@/lib/api";
+import { Button } from "@/components/ui/Button";
+import { Leaf, Heart, Mail } from "lucide-react";
 
 export default function CompletePage() {
+  const participantId = useStore((s) => s.participantId);
   const reset = useStore((s) => s.reset);
+  const [feedback, setFeedback] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    // Clear session after showing completion
-    const timer = setTimeout(() => reset(), 5000);
-    return () => clearTimeout(timer);
-  }, [reset]);
+  const handleSubmitFeedback = async () => {
+    if (!feedback.trim()) {
+      setSubmitted(true);
+      reset();
+      return;
+    }
+    setSaving(true);
+    try {
+      if (participantId) {
+        await api.logEvent(participantId, 0, {
+          type: "optional_feedback",
+          feedback: feedback.trim(),
+        });
+      }
+    } catch {
+      // silently ignore — feedback is optional
+    }
+    setSaving(false);
+    setSubmitted(true);
+    reset();
+  };
 
   return (
-    <div className="healing-bg min-h-screen flex items-center justify-center px-4">
+    <div className="healing-bg min-h-screen flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -41,10 +63,55 @@ export default function CompletePage() {
           </p>
         </div>
 
-        <div className="glass-card p-5 space-y-2">
+        {/* Debrief */}
+        <div className="glass-card p-5 space-y-2 text-left">
           <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
             <strong className="text-[var(--warm-brown)]">Study debrief:</strong> This study explored how people approach creative writing tasks when working with different types of AI support. Your participation contributes to research on human-AI collaboration and creativity.
           </p>
+        </div>
+
+        {/* Optional feedback */}
+        {!submitted && (
+          <div className="glass-card p-5 space-y-3 text-left">
+            <label className="text-sm font-medium text-[var(--warm-brown)]">
+              Any feedback? <span className="text-[var(--warm-gray)] font-normal">(optional)</span>
+            </label>
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Was anything unclear? Any suggestions for improving the study?"
+              rows={3}
+              className="
+                w-full rounded-2xl bg-white/60 border border-[var(--sage-light)]/40
+                px-4 py-3 text-sm text-[var(--warm-brown)] leading-relaxed
+                placeholder:text-[var(--warm-gray)]/50
+                resize-none focus:outline-none focus:ring-2 focus:ring-[var(--sage)]/40
+              "
+            />
+            <Button
+              onClick={handleSubmitFeedback}
+              disabled={saving}
+              size="md"
+              className="w-full"
+            >
+              {saving ? "Saving..." : feedback.trim() ? "Submit feedback and finish" : "Finish"}
+            </Button>
+          </div>
+        )}
+
+        {submitted && (
+          <p className="text-sm text-[var(--sage-dark)]">
+            Your session is complete. You may close this window.
+          </p>
+        )}
+
+        {/* Contact */}
+        <div className="glass-card p-4 space-y-1">
+          <div className="flex items-center justify-center gap-1.5 text-xs text-[var(--warm-gray)]">
+            <Mail className="w-3 h-3 text-[var(--sage)]" />
+            Questions or data withdrawal requests
+          </div>
+          <p className="text-xs text-[var(--warm-brown)] font-medium">potteryhrr@gmail.com</p>
         </div>
 
         <div className="flex items-center justify-center gap-1.5 text-xs text-[var(--warm-gray)]">

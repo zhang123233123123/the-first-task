@@ -23,7 +23,7 @@ const BLOCKS: Block[] = [
     id: "consent",
     title: "Informed Consent",
     description:
-      "You will complete two short creative writing tasks and answer a few questions (approx. 15 minutes). Your participation is voluntary — you may withdraw at any time. No audio, video, or images will be captured. All responses are anonymous and used for academic research only. You may request data withdrawal within 14 days by contacting zojaji@kth.se. By continuing, you confirm you are 18+ and agree to participate.",
+      "You will complete two short creative writing tasks and answer a few questions (approx. 15 minutes). Your participation is voluntary — you may withdraw at any time. No audio, video, or images will be captured. All responses are anonymous and used for academic research only. You may request data withdrawal within 14 days by contacting potteryhrr@gmail.com. By continuing, you confirm you are 18+ and agree to participate.",
     items: [],
   },
   {
