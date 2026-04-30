@@ -129,11 +129,11 @@ const BLOCKS: Block[] = [
     title: "Personal Beliefs",
     description: "Please indicate how strongly you agree or disagree with the following statements.",
     items: [
-      { key: "loc_ie1", label: "I can bring about positive changes by my own actions.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
-      { key: "loc_ie2", label: "How my life goes is my own doing.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
-      { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' (4) for this item.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
-      { key: "loc_ie3", label: "I have little influence on how my life turns out.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
-      { key: "loc_ie4", label: "What I achieve in life is largely a matter of fate or luck.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie1", label: "I can bring about positive changes by my own actions.", type: "scale", lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie2", label: "How my life goes is my own doing.", type: "scale", lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "attn_baseline", label: "This is an attention check. Please select 'Agree' (6) for this item.", type: "scale", lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie3", label: "I have little influence on how my life turns out.", type: "scale", lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
+      { key: "loc_ie4", label: "What I achieve in life is largely a matter of fate or luck.", type: "scale", lowLabel: "Strongly disagree", highLabel: "Strongly agree" },
     ],
   },
   {

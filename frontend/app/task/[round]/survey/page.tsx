@@ -239,9 +239,9 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
                   value={(responses[item.key] as number | null) ?? null}
                   onChange={(val) => setResponses((r) => ({ ...r, [item.key]: val }))}
                   {...(currentBlock.id.startsWith("smi_") && {
-                    points: 4,
-                    lowLabel: "Not at all",
-                    highLabel: "Very much so",
+                    points: 7,
+                    lowLabel: "Strongly disagree",
+                    highLabel: "Strongly agree",
                   })}
                   {...(currentBlock.id === "pilot_manip" && {
                     points: 7,
