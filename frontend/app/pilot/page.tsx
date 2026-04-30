@@ -13,7 +13,8 @@ type ResponseValue = string | number | string[] | null;
 
 type BaselineItem =
   | { key: string; label: string; type: "scale"; points?: 5 | 7; lowLabel?: string; highLabel?: string }
-  | { key: string; label: string; type: "select"; options: string[] };
+  | { key: string; label: string; type: "select"; options: string[] }
+  | { key: string; label: string; type: "text"; placeholder?: string };
 
 type Block = { id: string; title: string; description: string; items: BaselineItem[] };
 
@@ -34,35 +35,49 @@ const BLOCKS: Block[] = [
       {
         key: "demo_age",
         label: "What is your age?",
-        type: "select",
-        options: ["18-24", "25-34", "35-44", "45-54", "55-64", "65 or older", "Prefer not to say"],
+        type: "text",
+        placeholder: "e.g. 25",
       },
       {
         key: "demo_gender",
         label: "What is your gender?",
         type: "select",
-        options: ["Female", "Male", "Prefer not to say"],
+        options: ["Female", "Male"],
       },
       {
         key: "demo_education",
         label: "What is your highest level of completed education?",
         type: "select",
         options: [
-          "Less than high school",
-          "High school or equivalent",
-          "Some college",
-          "Associate degree",
-          "Bachelor's degree",
-          "Master's degree",
-          "Doctoral or professional degree",
-          "Prefer not to say",
+          "Below High School",
+          "High School",
+          "College/University",
+          "Graduate/Postgraduate",
         ],
+      },
+      {
+        key: "demo_occupation",
+        label: "What is your current occupation or academic status?",
+        type: "text",
+        placeholder: "e.g. Software engineer",
+      },
+      {
+        key: "demo_country",
+        label: "What is your country / region?",
+        type: "text",
+        placeholder: "e.g. United States",
       },
       {
         key: "demo_english",
         label: "What is your English proficiency level?",
         type: "select",
-        options: ["Beginner", "Proficient", "Advanced", "Native speaker", "Prefer not to say"],
+        options: ["Beginner", "Intermediate", "Advanced", "Native/Bilingual"],
+      },
+      {
+        key: "demo_prior_ai_study",
+        label: "Have you previously participated in studies involving generative AI?",
+        type: "select",
+        options: ["Yes", "No", "Not sure"],
       },
     ],
   },
@@ -121,8 +136,8 @@ export default function PilotEntryPage() {
         isPilot: true,
       });
 
-      await api.updateProgress(pid, "task/1/brief");
-      router.push("/task/1/brief");
+      await api.updateProgress(pid, "instructions");
+      router.push("/instructions");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to start. Please try again.");
       setLoading(false);
@@ -165,6 +180,20 @@ export default function PilotEntryPage() {
                       lowLabel={item.lowLabel}
                       highLabel={item.highLabel}
                     />
+                  );
+                }
+                if (item.type === "text") {
+                  return (
+                    <div key={item.key} className="space-y-2">
+                      <label className="text-sm text-[var(--warm-brown)] leading-relaxed">{item.label}</label>
+                      <input
+                        type="text"
+                        value={String(responses[item.key] ?? "")}
+                        onChange={(e) => setValue(item.key, e.target.value || null)}
+                        placeholder={item.placeholder}
+                        className="w-full rounded-2xl bg-white/60 border border-[var(--sage-light)]/40 px-4 py-3 text-sm text-[var(--warm-brown)] focus:outline-none focus:ring-2 focus:ring-[var(--sage)]/40"
+                      />
+                    </div>
                   );
                 }
                 if (item.type === "select") {
