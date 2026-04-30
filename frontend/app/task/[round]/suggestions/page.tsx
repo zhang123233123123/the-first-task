@@ -346,8 +346,8 @@ export default function SuggestionsPage({
     if (isPilot) {
       // Pilot: skip post-task survey, go to next task or manipulation check
       if (round === 1) {
-        if (participantId) await api.updateProgress(participantId, "task/2/brief");
-        router.push("/task/2/brief");
+        if (participantId) await api.updateProgress(participantId, "transition");
+        router.push("/transition");
       } else {
         if (participantId) await api.updateProgress(participantId, "pilot/check");
         router.push("/pilot/check");

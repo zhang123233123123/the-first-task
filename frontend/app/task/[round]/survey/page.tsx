@@ -174,8 +174,8 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     }
 
     if (round === 1) {
-      await api.updateProgress(participantId!, "task/2/brief");
-      router.push("/task/2/brief");
+      await api.updateProgress(participantId!, "transition");
+      router.push("/transition");
     } else {
       await api.completeStudy(participantId!);
       router.push("/complete");
