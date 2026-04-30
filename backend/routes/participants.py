@@ -65,7 +65,7 @@ def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends
             provocateur_flag=provocateur_flag,
             friction_flag=friction_flag,
             task_order=task_order,
-            study_mode=payload.study_mode,
+            study_mode="pilot" if payload.is_pilot else "main",
             current_page="consent",
         )
     else:
@@ -78,7 +78,7 @@ def init_participant(payload: InitPayload = InitPayload(), db: Session = Depends
             provocateur_flag=False,
             friction_flag=False,
             task_order=None,
-            study_mode=payload.study_mode,
+            study_mode="pilot" if payload.is_pilot else "main",
             current_page="consent",
         )
 

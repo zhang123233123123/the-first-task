@@ -136,23 +136,28 @@ export default function SuggestionsPage({
       router.replace("/consent");
       return;
     }
-    api
-      .getTaskPrompt(participantId, round)
-      .then((result) => {
-        setPromptData(result.prompt);
-        setPromptError(null);
-      })
-      .catch((e: Error) => setPromptError(e.message))
-      .finally(() => setPromptLoading(false));
-
+    // getSuggestions creates the TaskSession, so it must complete
+    // before getTaskPrompt (which reads the session) is called.
     api
       .getSuggestions(participantId, round)
       .then((d) => {
         setData(d as unknown as SuggestionsData);
         setSuggestionsError(null);
+        // Now that session exists, fetch the prompt
+        return api.getTaskPrompt(participantId, round);
       })
-      .catch((e: Error) => setSuggestionsError(e.message))
-      .finally(() => setSuggestionsLoading(false));
+      .then((result) => {
+        setPromptData(result.prompt);
+        setPromptError(null);
+      })
+      .catch((e: Error) => {
+        setSuggestionsError(e.message);
+        setPromptError(e.message);
+      })
+      .finally(() => {
+        setSuggestionsLoading(false);
+        setPromptLoading(false);
+      });
   }, [participantId, round, router]);
 
   // ── Derived flags from backend response ──────────────────

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/Button";
@@ -9,12 +9,10 @@ import { api } from "@/lib/api";
 import {
   MessageSquare,
   PenLine,
-  Clock,
   BookOpen,
   Send,
   ChevronRight,
   ChevronLeft,
-  MousePointerClick,
 } from "lucide-react";
 
 // ── Tutorial steps ──────────────────────────────────────────
@@ -23,7 +21,7 @@ interface TutorialStep {
   id: string;
   title: string;
   description: string;
-  highlight: "left" | "right-top" | "right-bottom" | "timer" | "overview" | "chat-input";
+  region: "overview" | "left-panel" | "chat-input" | "right-top" | "right-bottom" | "timer";
 }
 
 const STEPS: TutorialStep[] = [
@@ -31,58 +29,45 @@ const STEPS: TutorialStep[] = [
     id: "overview",
     title: "Your workspace",
     description:
-      "This is the interface you will use for each task. Take a moment to familiarise yourself with the layout before you begin.",
-    highlight: "overview",
+      "This is the interface you will use for each task. It has two main areas: a support panel on the left and your writing space on the right. Let's walk through each part.",
+    region: "overview",
   },
   {
     id: "left-panel",
-    title: "Left panel — AI Assistant",
+    title: "Support panel",
     description:
-      "This panel provides support while you work. Depending on the task, you may see suggestions, prompts for reflection, or a chatbot. You decide what to use, adapt, or ignore.",
-    highlight: "left",
+      "This panel may provide guidance or suggestions while you work. You decide what to use, adapt, or ignore — the final response is always yours.",
+    region: "left-panel",
   },
   {
     id: "chat-input",
     title: "Chat input",
     description:
-      "If a chatbot is available, type your message here and press the send button (or Enter) to interact with it.",
-    highlight: "chat-input",
+      "If a chatbot is available, type your message here and press the send button or Enter key to interact with it.",
+    region: "chat-input",
   },
   {
     id: "task-prompt",
-    title: "Right panel — Task instructions",
+    title: "Task instructions",
     description:
-      "The top of the right panel shows the task instructions. Read them carefully before you start writing.",
-    highlight: "right-top",
+      "This card shows the task you need to complete. Read the instructions and any provided keywords carefully before you start writing.",
+    region: "right-top",
   },
   {
     id: "writing-area",
-    title: "Right panel — Your answer",
+    title: "Your answer",
     description:
-      "Write your response in the text area below the instructions. When you are satisfied, click the submit button.",
-    highlight: "right-bottom",
+      "Write your response here. You need at least 80 characters. When you are satisfied with your answer, click the submit button at the bottom.",
+    region: "right-bottom",
   },
   {
     id: "timer",
-    title: "Timer",
+    title: "Time limit",
     description:
-      "Each task has a 5-minute time limit shown in the bottom-left. When time runs out, you can still submit your current work.",
-    highlight: "timer",
+      "Each task has a 5-minute countdown. When time runs out you can still submit your current work — so don't worry if you need a moment longer.",
+    region: "timer",
   },
 ];
-
-// ── Highlight ring style helper ─────────────────────────────
-
-function highlightClass(
-  region: TutorialStep["highlight"],
-  active: TutorialStep["highlight"]
-) {
-  const base = "transition-all duration-300 rounded-2xl";
-  if (active === "overview") return base; // no ring in overview step
-  if (region === active)
-    return `${base} ring-2 ring-[var(--lavender)] ring-offset-2 ring-offset-[var(--cream)] z-10 relative`;
-  return `${base} opacity-40 pointer-events-none`;
-}
 
 // ── Page component ──────────────────────────────────────────
 
@@ -91,9 +76,38 @@ export default function TutorialPage() {
   const participantId = useStore((s) => s.participantId);
   const isPilot = useStore((s) => s.isPilot);
   const [step, setStep] = useState(0);
+  const [overlayRect, setOverlayRect] = useState<DOMRect | null>(null);
+
+  // Refs for each highlightable region
+  const refs = {
+    "left-panel": useRef<HTMLDivElement>(null),
+    "chat-input": useRef<HTMLDivElement>(null),
+    "right-top": useRef<HTMLDivElement>(null),
+    "right-bottom": useRef<HTMLDivElement>(null),
+    timer: useRef<HTMLDivElement>(null),
+  };
 
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
+  const isOverview = current.region === "overview";
+
+  // Calculate highlight rect
+  const updateRect = useCallback(() => {
+    if (isOverview) {
+      setOverlayRect(null);
+      return;
+    }
+    const ref = refs[current.region as keyof typeof refs];
+    if (ref?.current) {
+      setOverlayRect(ref.current.getBoundingClientRect());
+    }
+  }, [step, isOverview]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    updateRect();
+    window.addEventListener("resize", updateRect);
+    return () => window.removeEventListener("resize", updateRect);
+  }, [updateRect]);
 
   const handleFinish = async () => {
     if (isPilot) {
@@ -109,66 +123,164 @@ export default function TutorialPage() {
     }
   };
 
+  // Overlay with cutout
+  const pad = 8;
+  const radius = 16;
+
   return (
-    <div className="healing-bg min-h-screen flex flex-col px-4 py-6 gap-4">
+    <div className="healing-bg min-h-screen flex flex-col px-4 py-6 gap-4 relative">
+      {/* ── Overview dim overlay ── */}
+      {isOverview && (
+        <div className="fixed inset-0 z-40 bg-black/30 pointer-events-none transition-opacity duration-300" />
+      )}
+
+      {/* ── Dark overlay with cutout ── */}
+      {!isOverview && overlayRect && (
+        <div
+          className="fixed inset-0 z-40 pointer-events-none transition-all duration-300"
+          style={{
+            background: `rgba(0,0,0,0.45)`,
+            clipPath: `polygon(
+              0% 0%, 0% 100%, 100% 100%, 100% 0%, 0% 0%,
+              ${overlayRect.left - pad}px ${overlayRect.top - pad}px,
+              ${overlayRect.left - pad}px ${overlayRect.bottom + pad}px,
+              ${overlayRect.right + pad}px ${overlayRect.bottom + pad}px,
+              ${overlayRect.right + pad}px ${overlayRect.top - pad}px,
+              ${overlayRect.left - pad}px ${overlayRect.top - pad}px
+            )`,
+          }}
+        />
+      )}
+
+      {/* ── Highlight border ring ── */}
+      {!isOverview && overlayRect && (
+        <motion.div
+          className="fixed z-50 pointer-events-none border-2 border-[var(--lavender)] shadow-lg shadow-[var(--lavender)]/20"
+          initial={false}
+          animate={{
+            left: overlayRect.left - pad,
+            top: overlayRect.top - pad,
+            width: overlayRect.width + pad * 2,
+            height: overlayRect.height + pad * 2,
+          }}
+          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          style={{ borderRadius: radius }}
+        />
+      )}
+
+      {/* ── Floating tooltip card ── */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={step}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className={`fixed z-50 ${isOverview || !overlayRect ? "inset-0 flex items-center justify-center pointer-events-none" : ""}`}
+          style={
+            isOverview || !overlayRect
+              ? {}
+              : (() => {
+                  const tooltipH = 200;
+                  const tooltipW = 336;
+                  const gap = 16;
+                  const vh = window.innerHeight;
+                  const vw = window.innerWidth;
+                  // Clamp top so tooltip stays in viewport
+                  const clampTop = (t: number) => Math.min(Math.max(16, t), vh - tooltipH - 16);
+
+                  // Prefer right side
+                  if (overlayRect.right + gap + tooltipW < vw) {
+                    return { left: overlayRect.right + gap, top: clampTop(overlayRect.top) };
+                  }
+                  // Fallback left side
+                  if (overlayRect.left - gap - tooltipW > 0) {
+                    return { left: overlayRect.left - gap - tooltipW, top: clampTop(overlayRect.top) };
+                  }
+                  // Fallback above
+                  if (overlayRect.top - gap - tooltipH > 0) {
+                    return { left: "50%", transform: "translateX(-50%)", top: overlayRect.top - gap - tooltipH };
+                  }
+                  // Fallback below
+                  return { left: "50%", transform: "translateX(-50%)", top: overlayRect.bottom + gap };
+                })()
+          }
+        >
+          <div className={`glass-card p-5 space-y-3 shadow-xl pointer-events-auto ${isOverview ? "w-96" : "w-80"}`}>
+            <div>
+              <p className="text-xs font-medium text-[var(--lavender)] uppercase tracking-wide mb-0.5">
+                Step {step + 1} of {STEPS.length}
+              </p>
+              <h3 className="text-base font-semibold text-[var(--warm-brown)]">
+                {current.title}
+              </h3>
+              <p className="text-sm text-[var(--warm-gray)] leading-relaxed mt-1">
+                {current.description}
+              </p>
+            </div>
+
+            <div className="flex gap-2 justify-between">
+            <Button
+              onClick={() => setStep((s) => Math.max(0, s - 1))}
+              disabled={step === 0}
+              size="sm"
+              variant="secondary"
+              className="flex items-center gap-1"
+            >
+              <ChevronLeft className="w-3.5 h-3.5" />
+              Back
+            </Button>
+
+            {isLast ? (
+              <Button
+                onClick={handleFinish}
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                Got it
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            ) : (
+              <Button
+                onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
+                size="sm"
+                className="flex items-center gap-1"
+              >
+                Next
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
+            )}
+            </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ── Mock workspace layout ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45 }}
         className="flex-1 flex min-h-0 flex-col gap-4 w-full max-w-[1400px] mx-auto"
       >
-        {/* ── Step indicator + instruction strip ── */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -12 }}
-            transition={{ duration: 0.18 }}
-            className="glass-card p-4 flex items-start gap-4"
-          >
-            <div className="w-10 h-10 rounded-2xl flex-shrink-0 flex items-center justify-center bg-[var(--lavender-light)]">
-              <MousePointerClick className="w-5 h-5 text-[var(--lavender)]" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide mb-0.5">
-                Quick tour — step {step + 1} of {STEPS.length}
-              </p>
-              <h2 className="text-base font-semibold text-[var(--warm-brown)]">
-                {current.title}
-              </h2>
-              <p className="text-sm text-[var(--warm-gray)] leading-relaxed mt-0.5">
-                {current.description}
-              </p>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+        {/* Progress-like header */}
+        <div className="glass-card px-4 py-2.5 flex-shrink-0">
+          <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
+            Quick tour — preview of the task workspace
+          </p>
+        </div>
 
-        {/* ── Mock workspace layout ── */}
-        <div className="flex-1 min-h-0 grid gap-4 grid-cols-1 lg:grid-cols-[3fr_2fr] lg:h-[calc(100vh-260px)]">
+        {/* Two-column grid */}
+        <div className="flex-1 min-h-0 grid gap-4 grid-cols-1 lg:grid-cols-[3fr_2fr] lg:h-[calc(100vh-160px)]">
           {/* ── Left column ── */}
           <div className="flex min-h-0 flex-col gap-4">
             {/* AI panel mock */}
             <div
-              className={`glass-card flex flex-col overflow-hidden flex-1 ${highlightClass(
-                "left",
-                current.highlight
-              )}`}
+              ref={refs["left-panel"]}
+              className="glass-card flex flex-col overflow-hidden flex-1"
             >
               <div className="px-4 pt-4 pb-2 border-b border-[var(--sage-light)]/20 flex-shrink-0">
                 <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
-                  AI Assistant
-                </p>
-              </div>
-
-              <div className="px-4 py-2 bg-[var(--sage-light)]/10 border-b border-[var(--sage-light)]/20 flex-shrink-0 space-y-0.5">
-                <p className="text-xs text-[var(--warm-gray)]/80 leading-relaxed">
-                  <span className="font-medium text-[var(--warm-gray)]">This panel</span>
-                  {" — AI suggestions. Use the box below to ask follow-up questions."}
-                </p>
-                <p className="text-xs text-[var(--warm-gray)]/80 leading-relaxed">
-                  <span className="font-medium text-[var(--warm-gray)]">Right panel</span>
-                  {" — task instructions (top) and your answer space (bottom)."}
+                  Support Panel
                 </p>
               </div>
 
@@ -181,14 +293,11 @@ export default function TutorialPage() {
 
               {/* Chat input mock */}
               <div
-                className={`flex gap-2 items-end p-3 border-t border-[var(--sage-light)]/20 flex-shrink-0 ${
-                  current.highlight === "chat-input"
-                    ? "ring-2 ring-[var(--lavender)] ring-offset-1 ring-offset-[var(--cream)] rounded-b-2xl z-10 relative"
-                    : ""
-                }`}
+                ref={refs["chat-input"]}
+                className="flex gap-2 items-end p-3 border-t border-[var(--sage-light)]/20 flex-shrink-0"
               >
                 <div className="flex-1 rounded-2xl bg-white/60 border border-[var(--sage-light)]/40 px-3 py-2 text-sm text-[var(--warm-gray)]/50">
-                  Ask AI for creative suggestions…
+                  Ask for creative suggestions…
                 </div>
                 <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[var(--lavender-light)] text-[var(--lavender)] opacity-30">
                   <Send className="w-3.5 h-3.5" />
@@ -198,10 +307,8 @@ export default function TutorialPage() {
 
             {/* Timer mock */}
             <div
-              className={`glass-card p-5 flex-shrink-0 ${highlightClass(
-                "timer",
-                current.highlight
-              )}`}
+              ref={refs.timer}
+              className="glass-card p-5 flex-shrink-0"
             >
               <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide mb-2">
                 Time Limit
@@ -217,10 +324,8 @@ export default function TutorialPage() {
           <div className="flex min-h-0 flex-col gap-4 overflow-hidden lg:h-full">
             {/* Task prompt mock */}
             <div
-              className={`glass-card p-5 space-y-3 flex-shrink-0 ${highlightClass(
-                "right-top",
-                current.highlight
-              )}`}
+              ref={refs["right-top"]}
+              className="glass-card p-5 space-y-3 flex-shrink-0"
             >
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-[var(--sage)]" />
@@ -251,10 +356,8 @@ export default function TutorialPage() {
 
             {/* Writing area mock */}
             <div
-              className={`glass-card p-6 flex flex-col flex-1 space-y-4 min-h-0 ${highlightClass(
-                "right-bottom",
-                current.highlight
-              )}`}
+              ref={refs["right-bottom"]}
+              className="glass-card p-6 flex flex-col flex-1 space-y-4 min-h-0"
             >
               <div className="flex items-center gap-2 flex-shrink-0">
                 <PenLine className="w-4 h-4 text-[var(--sage)]" />
@@ -275,40 +378,6 @@ export default function TutorialPage() {
               </div>
             </div>
           </div>
-        </div>
-
-        {/* ── Navigation buttons ── */}
-        <div className="flex gap-3 justify-between flex-shrink-0">
-          <Button
-            onClick={() => setStep((s) => Math.max(0, s - 1))}
-            disabled={step === 0}
-            size="md"
-            variant="secondary"
-            className="flex items-center gap-1"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back
-          </Button>
-
-          {isLast ? (
-            <Button
-              onClick={handleFinish}
-              size="md"
-              className="flex items-center gap-1"
-            >
-              Got it — continue
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button
-              onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}
-              size="md"
-              className="flex items-center gap-1"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          )}
         </div>
       </motion.div>
     </div>

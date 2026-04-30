@@ -31,8 +31,8 @@ export default function InstructionsPage() {
     },
     {
       icon: Sparkles,
-      title: "AI assistance",
-      desc: "The left panel will provide some form of support during each task. You decide what to keep, adapt, or ignore.",
+      title: "Left panel support",
+      desc: "The left panel may provide guidance or suggestions during each task. You decide what to use, adapt, or ignore.",
       color: "var(--lavender-light)",
       iconColor: "var(--lavender)",
     },

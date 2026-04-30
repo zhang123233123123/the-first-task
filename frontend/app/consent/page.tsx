@@ -109,7 +109,7 @@ function ConsentContent() {
           <h2 className="font-semibold text-[var(--warm-brown)]">Informed Consent</h2>
           <div className="text-sm text-[var(--warm-gray)] space-y-2 leading-relaxed">
             <p>
-              This study is conducted as part of academic research at KTH Royal Institute of Technology. Your participation is entirely voluntary, and you may withdraw at any time without any consequences.
+              This study is conducted as part of academic research. Your participation is entirely voluntary, and you may withdraw at any time without any consequences.
             </p>
             <p>
               You will complete two short creative writing tasks, with possible AI assistance, and answer related questionnaires about your background and experience. The study involves no foreseeable risks beyond everyday computer use.
