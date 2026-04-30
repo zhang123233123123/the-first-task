@@ -140,7 +140,7 @@ export default function PilotEntryPage() {
           transition={{ duration: 0.18 }}
           className="w-full max-w-xl space-y-6"
         >
-          <ProgressBar step={block + 1} total={BLOCKS.length} label="Pilot study setup" />
+          <ProgressBar step={block + 1} total={BLOCKS.length} label="Study setup" />
 
           <div className="glass-card p-7 space-y-6">
             <div>

@@ -79,11 +79,6 @@ function ConsentContent() {
           <div className="inline-flex items-center gap-2 bg-[var(--sage-light)]/30 text-[var(--sage-dark)] text-xs font-medium px-3 py-1.5 rounded-full">
             <Leaf className="w-3.5 h-3.5" />
             Research Study
-            {condition && (
-              <span className="ml-1 text-[var(--warm-gray)]">
-                · {CONDITION_LABELS[condition]}
-              </span>
-            )}
           </div>
           <h1 className="text-3xl font-semibold text-[var(--warm-brown)] tracking-tight">
             Creativity &amp; AI Study
