@@ -102,8 +102,15 @@ export default function SuggestionsPage({
     } else {
       startTime.current = Date.now();
       sessionStorage.setItem(storageKey, String(startTime.current));
+      // Log precise begin timestamp
+      if (participantId) {
+        api.logEvent(participantId, round, {
+          type: "task_begin",
+          timestamp: new Date().toISOString(),
+        });
+      }
     }
-  }, [round]);
+  }, [round, participantId]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -337,8 +344,16 @@ export default function SuggestionsPage({
   const submitArtifact = async () => {
     if (!canSubmit) return;
     setSaving(true);
-    const dwell = (Date.now() - (startTime.current ?? Date.now())) / 1000;
+    const now = Date.now();
+    const dwell = (now - (startTime.current ?? now)) / 1000;
     if (participantId) {
+      // Log precise submit timestamp
+      api.logEvent(participantId, round, {
+        type: "task_submit",
+        timestamp: new Date(now).toISOString(),
+        dwell_seconds: dwell,
+        char_count: text.trim().length,
+      });
       await api.saveArtifact(participantId, round, text.trim(), dwell);
     }
     sessionStorage.removeItem(`chi-timer-start-${round}`);
