@@ -18,10 +18,10 @@ export default function PilotCompletePage() {
         <div className="glass-card p-8 text-center space-y-5">
           <CheckCircle className="w-12 h-12 text-[var(--sage)] mx-auto" />
           <h1 className="text-2xl font-bold text-[var(--warm-brown)]">
-            Pilot study complete
+            Study complete
           </h1>
           <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
-            Thank you for participating in this pilot study. Your responses have been recorded and will help us refine the experiment.
+            Thank you for participating. Your responses have been recorded and will contribute to our research.
           </p>
           {participantId && (
             <p className="text-xs text-[var(--warm-gray)]/60 font-mono">

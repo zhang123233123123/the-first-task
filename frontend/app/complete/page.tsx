@@ -43,7 +43,7 @@ export default function CompletePage() {
 
         <div className="glass-card p-5 space-y-2">
           <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
-            <strong className="text-[var(--warm-brown)]">Study debrief:</strong> This study examined how different types of AI support — such as generating ideas, asking reflective questions, or encouraging you to pause and reconsider — affect creative thinking and sense of ownership over your work. Your participation contributes to research on human-AI collaboration and creativity.
+            <strong className="text-[var(--warm-brown)]">Study debrief:</strong> This study explored how people approach creative writing tasks when working with different types of AI support. Your participation contributes to research on human-AI collaboration and creativity.
           </p>
         </div>
 

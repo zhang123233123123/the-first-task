@@ -42,21 +42,13 @@ export default function TaskBriefPage({ params }: { params: Promise<{ round: str
   };
 
   const isStory = taskType === "story";
-  const taskLabel = isStory ? "Short Story Task" : "Creative Metaphor Task";
+  const taskLabel = `Task ${round}`;
   const taskDesc = isStory
     ? "Write a creative short story of about 4\u20136 sentences using the prompt words provided."
     : "Complete a creative metaphor as imaginatively as you can.";
 
   // Resolve effective condition for this specific round (combined conditions switch each round)
-  const systemDesc: Record<string, string> = {
-    no_ai:          "Complete this task using your own ideas and creativity. No AI assistance will be provided.",
-    basic_ai:       "An AI assistant will be available in the left panel. You can ask it for creative ideas at any time. The final response is always yours.",
-    provocateur:    "An AI assistant will appear in the left panel. It may challenge your assumptions or ask questions about your ideas. You decide how to respond and whether to incorporate any feedback.",
-    friction:       "As you write, you may be asked to pause briefly and reflect on your current direction before continuing. This is a normal part of the task.",
-    prov_then_fric: "An AI assistant may challenge your thinking, and you may also be asked to pause and reflect as you write. The final response is always yours.",
-    fric_then_prov: "As you write, you may be asked to pause and reflect. An AI assistant may also challenge your thinking to help you explore further. The final response is always yours.",
-  };
-  const conditionHint = systemDesc[conditionId ?? ""] ?? "The final response is always yours.";
+  const conditionHint = "Please complete the task to the best of your ability. The final response is always yours.";
 
   const progressStep = round === 1 ? 1 : 9;
 

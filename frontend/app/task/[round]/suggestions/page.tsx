@@ -463,7 +463,7 @@ export default function SuggestionsPage({
                 <p className="text-xs text-[var(--warm-gray)]/80 leading-relaxed">
                   <span className="font-medium text-[var(--warm-gray)]">This panel</span>
                   {noAiMode
-                    ? " — writing guidance (no AI for this task)."
+                    ? " — writing guidance and tips."
                     : provocateurActive
                     ? " — chatbot interaction. Use the box below to ask questions."
                     : " — AI suggestions. Use the box below to ask follow-up questions."}
@@ -481,7 +481,7 @@ export default function SuggestionsPage({
                 {noAiMode ? (
                   <div className="flex flex-col items-center justify-center h-full pt-8 gap-3 text-center px-4">
                     <p className="text-sm text-[var(--warm-gray)] leading-relaxed">
-                      Write freely using your own ideas. There are no AI suggestions for this task.
+                      Write freely using your own ideas. Use this space to brainstorm and develop your thoughts.
                     </p>
                   </div>
                 ) : suggestionsLoading && !messagesInitialized ? (
@@ -569,7 +569,7 @@ export default function SuggestionsPage({
                 <BookOpen className="w-4 h-4 text-[var(--sage)]" />
                 <div>
                   <p className="text-xs font-medium text-[var(--warm-gray)] uppercase tracking-wide">
-                    {taskType === "story" ? "Short Story Task" : "Creative Metaphor Task"}
+                    {`Task ${round}`}
                   </p>
                   <p className="text-sm font-semibold text-[var(--warm-brown)]">Task instruction</p>
                 </div>

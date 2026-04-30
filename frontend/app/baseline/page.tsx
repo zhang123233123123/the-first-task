@@ -109,7 +109,7 @@ const BLOCKS: Block[] = [
   },
   {
     id: "nfc",
-    title: "Need for Cognition",
+    title: "Thinking Style",
     description: "Please indicate how well each statement describes you.",
     items: [
       { key: "nfc_prefer", label: "I prefer tasks that require careful thinking.", type: "scale" },
@@ -126,7 +126,7 @@ const BLOCKS: Block[] = [
     // 2 internal-control items + 2 external-control items (reversed).
     // Used as a stable trait measure; placed pre-task as a baseline control variable.
     id: "loc",
-    title: "Locus of Control",
+    title: "Personal Beliefs",
     description: "Please indicate how strongly you agree or disagree with the following statements.",
     items: [
       { key: "loc_ie1", label: "I can bring about positive changes by my own actions.", type: "scale", points: 5, lowLabel: "Strongly disagree", highLabel: "Strongly agree" },

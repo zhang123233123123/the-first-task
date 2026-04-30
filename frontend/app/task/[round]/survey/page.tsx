@@ -119,10 +119,10 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
   // Manipulation checks (PROV_CHECK / FRICTION_CHECK) are pilot-study only.
   // They are NOT included in the main experiment survey per supervisor feedback.
   const BLOCKS = [
-    { id: "smi_aw",  title: "Awareness",         items: SMI_AWARENESS },
-    { id: "smi_cs",  title: "Cognitive strategy", items: SMI_COGNITIVE_STRATEGY },
-    { id: "smi_pl",  title: "Planning",           items: SMI_PLANNING },
-    { id: "smi_sc",  title: "Self-checking",      items: SMI_SELF_CHECKING },
+    { id: "smi_aw",  title: "Your thinking process",  items: SMI_AWARENESS },
+    { id: "smi_cs",  title: "Your approach",          items: SMI_COGNITIVE_STRATEGY },
+    { id: "smi_pl",  title: "Getting started",        items: SMI_PLANNING },
+    { id: "smi_sc",  title: "Reviewing your work",    items: SMI_SELF_CHECKING },
     {
       id: "cse",
       title: "Creative confidence",
@@ -131,7 +131,7 @@ export default function SurveyPage({ params }: { params: Promise<{ round: string
     { id: "load", title: "Task effort", items: LOAD_ITEMS },
     {
       id: "ownership",
-      title: "Ownership",
+      title: "Your experience",
       items: OWNERSHIP_ITEMS.map((it) => {
         if (!isNoAi) return it;
         if (it.key === "own_shape")

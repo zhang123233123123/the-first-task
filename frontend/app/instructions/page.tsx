@@ -16,7 +16,7 @@ export default function InstructionsPage() {
     {
       icon: BookOpen,
       title: "Two creative tasks",
-      desc: "You will complete two short creative tasks: one story task and one metaphor task.",
+      desc: "You will complete two short creative writing tasks.",
       color: "var(--sage-light)",
       iconColor: "var(--sage-dark)",
     },

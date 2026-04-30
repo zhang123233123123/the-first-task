@@ -54,7 +54,7 @@ export default function PilotCheckPage() {
         transition={{ duration: 0.3 }}
         className="w-full max-w-xl space-y-6"
       >
-        <ProgressBar step={5} total={5} label="Pilot — final questions" />
+        <ProgressBar step={5} total={5} label="Final questions" />
 
         <div className="glass-card p-7 space-y-6">
           <div>

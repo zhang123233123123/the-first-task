@@ -21,9 +21,9 @@ type Block = { id: string; title: string; description: string; items: BaselineIt
 const BLOCKS: Block[] = [
   {
     id: "consent",
-    title: "Pilot Study — Informed Consent",
+    title: "Informed Consent",
     description:
-      "This is a pilot study to test our experiment platform. You will complete two short creative writing tasks and answer a few questions. The study takes approximately 15 minutes. Your responses are anonymous and will be used for research purposes only.",
+      "You will complete two short creative writing tasks and answer a few questions. The study takes approximately 15 minutes. Your responses are anonymous and will be used for research purposes only.",
     items: [],
   },
   {
