@@ -109,19 +109,22 @@ function ConsentContent() {
           <h2 className="font-semibold text-[var(--warm-brown)]">Informed Consent</h2>
           <div className="text-sm text-[var(--warm-gray)] space-y-2 leading-relaxed">
             <p>
-              This study is conducted as part of academic research on human–AI creativity. Your participation is entirely voluntary, and you may withdraw at any time without penalty.
+              This study is conducted as part of academic research at KTH Royal Institute of Technology. Your participation is entirely voluntary, and you may withdraw at any time without any consequences.
             </p>
             <p>
-              You will complete two short creative writing tasks, with possible AI assistance, and answer related questionnaires about your background and experience. The study involves no deception or risk beyond everyday computer use.
+              You will complete two short creative writing tasks, with possible AI assistance, and answer related questionnaires about your background and experience. The study involves no foreseeable risks beyond everyday computer use.
             </p>
             <p>
-              All responses are anonymous. No personally identifying information will be collected or shared. Data will be used solely for academic research purposes.
+              <strong className="text-[var(--warm-brown)]">No audio, video, or images</strong> of you will be captured during this study. All responses are anonymous — no personally identifying information will be collected or shared. Data will be used solely for academic research purposes and may be published in scientific publications in aggregate form.
             </p>
             <p>
-              By continuing, you confirm that you are 18 years of age or older and agree to participate.
+              You may request withdrawal of your data within <strong className="text-[var(--warm-brown)]">14 days</strong> after completing the study by contacting us at the email below.
             </p>
             <p>
-              Please note that responses may be reviewed for data quality, completeness, and response patterns. Submissions showing incomplete or inattentive effort may be excluded from analysis and may not be eligible for compensation where applicable.
+              By continuing, you confirm that you are <strong className="text-[var(--warm-brown)]">18 years of age or older</strong> and agree to participate of your own free will.
+            </p>
+            <p className="text-xs text-[var(--warm-gray)]/70 pt-1">
+              Contact: zojaji@kth.se
             </p>
           </div>
 
