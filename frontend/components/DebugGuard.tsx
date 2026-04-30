@@ -9,7 +9,7 @@ export function DebugGuard({ children }: { children: React.ReactNode }) {
   const params = useSearchParams();
   const provided = params.get("key") ?? "";
 
-  if (!DEBUG_KEY || provided !== DEBUG_KEY) {
+  if (DEBUG_KEY && provided !== DEBUG_KEY) {
     return (
       <div className="healing-bg min-h-screen flex items-center justify-center px-4">
         <div className="glass-card p-8 max-w-sm w-full text-center space-y-4">

@@ -3,6 +3,7 @@
 > Server address: `47.106.117.27`
 > Frontend port: `3000` | Backend port: `8000`
 > Base URL: `http://47.106.117.27:3000`
+> Contact email: potteryhrr@gmail.com
 
 ---
 
@@ -15,14 +16,16 @@ Users visit pages in the following order; each step automatically redirects to t
 | 1. Entry | http://47.106.117.27:3000/ | Automatically redirects to the consent page |
 | 2. Informed Consent | http://47.106.117.27:3000/consent | Read the study description, check the consent box to continue. Supports `?condition=xxx` parameter to specify condition (for debugging) |
 | 3. Instructions | http://47.106.117.27:3000/instructions | Overview of the experiment flow: 2 tasks + questionnaires |
-| 4. Baseline Questionnaire | http://47.106.117.27:3000/baseline | 6 blocks: Demographics → NFC → IE-4 → AI Use → Writing Exp → CSE |
-| 5. Task 1 Brief | http://47.106.117.27:3000/task/1/brief | Displays task type (story/metaphor) and condition-specific hints |
-| 6. Task 1 Workspace | http://47.106.117.27:3000/task/1/suggestions | 5-minute timed writing with AI panel (varies by condition) |
-| 7. Task 1 Post-test | http://47.106.117.27:3000/task/1/survey | Attention check → NASA-TLX → SMI (4 blocks) → CSE → Ownership |
-| 8. Task 2 Brief | http://47.106.117.27:3000/task/2/brief | Instructions for the second task |
-| 9. Task 2 Workspace | http://47.106.117.27:3000/task/2/suggestions | Same as Task 1 but with different prompts |
-| 10. Task 2 Post-test | http://47.106.117.27:3000/task/2/survey | Same as Task 1 post-test |
-| 11. Completion Page | http://47.106.117.27:3000/complete | Thank you + study debrief; session auto-clears after 5 seconds |
+| 4. Tutorial | http://47.106.117.27:3000/tutorial | 6-step guided workspace walkthrough (highlight regions + floating tooltip cards) |
+| 5. Baseline Questionnaire | http://47.106.117.27:3000/baseline | 6 blocks: Demographics → NFC → IE-4 (with attention check) → AI Use → Writing Exp → CSE |
+| 6. Task 1 Brief | http://47.106.117.27:3000/task/1/brief | Displays task type (story/metaphor) and condition-specific hints |
+| 7. Task 1 Workspace | http://47.106.117.27:3000/task/1/suggestions | 5-minute timed writing with AI panel (varies by condition). Logs `task_begin` and `task_submit` timestamps |
+| 8. Task 1 Post-test | http://47.106.117.27:3000/task/1/survey | SMI (4 blocks, with attention check) → CSE → NASA-TLX → Ownership |
+| 9. Transition | http://47.106.117.27:3000/transition | "Task 1 complete" prompt, click button to start Task 2 |
+| 10. Task 2 Brief | http://47.106.117.27:3000/task/2/brief | Instructions for the second task |
+| 11. Task 2 Workspace | http://47.106.117.27:3000/task/2/suggestions | Same as Task 1 but with different prompts |
+| 12. Task 2 Post-test | http://47.106.117.27:3000/task/2/survey | Same as Task 1 post-test |
+| 13. Completion Page | http://47.106.117.27:3000/complete | Thank you + optional feedback box + contact email; user clicks to finish |
 
 ### Main Study Conditions (6 types)
 
@@ -35,21 +38,44 @@ Users visit pages in the following order; each step automatically redirects to t
 | `prov_then_fric` | Provocation first, then reflection (combined condition) |
 | `fric_then_prov` | Reflection first, then provocation (combined condition) |
 
+### Scales (all 7-point Likert)
+
+| Scale | Items | Source | Location |
+|-------|-------|--------|----------|
+| IE-4 (Locus of Control) | 4 items | Kovaleva (2012) | Baseline |
+| SMI (State Metacognition) | 20 items | O'Neil & Abedi (1996) | Post-task survey |
+| Post-task CSE | 3 items | Tierney & Farmer (2002) adapted | Post-task survey |
+| NASA-TLX (Cognitive Load) | 3 items | Hart & Staveland (1988) | Post-task survey |
+| Ownership | 4 items | Van Dyne & Pierce (2004) adapted | Post-task survey |
+
+### Attention Checks
+
+| Key | Location | Description |
+|-----|----------|-------------|
+| `attn_baseline` | Baseline questionnaire (IE-4 block) | "Please select 'Agree' (6)" |
+| `attn_posttask` | Post-task survey (SMI Self-Checking block) | "Please select 'Agree' (6)", appears after each task |
+| `attn_pilot` | Pilot manipulation check | "Please select 'Agree' (6)" |
+
 ---
 
 ## 2. Pilot Study Flow
 
-Simplified flow: no baseline scales (demographics only), no post-task questionnaire, ends with a 2-item manipulation check.
+Simplified flow: no baseline scales (demographics only), manipulation check + attention check after tasks.
 
 | Step | Link | Description |
 |------|------|------|
 | 1. Entry | http://47.106.117.27:3000/pilot | Pilot informed consent + 4 demographics questions |
-| 2. Task 1 Brief | http://47.106.117.27:3000/task/1/brief | Same as main study |
-| 3. Task 1 Workspace | http://47.106.117.27:3000/task/1/suggestions | Same as main study (but only 3 conditions) |
-| 4. Task 2 Brief | http://47.106.117.27:3000/task/2/brief | Same as main study |
-| 5. Task 2 Workspace | http://47.106.117.27:3000/task/2/suggestions | Same as main study |
-| 6. Manipulation Check | http://47.106.117.27:3000/pilot/check | 2 Likert items (verifying friction/provocateur perception) |
-| 7. Completion Page | http://47.106.117.27:3000/pilot/complete | Pilot thank-you page |
+| 2. Instructions | http://47.106.117.27:3000/instructions | Overview of the experiment flow |
+| 3. Tutorial | http://47.106.117.27:3000/tutorial | 6-step workspace walkthrough |
+| 4. Task 1 Brief | http://47.106.117.27:3000/task/1/brief | Same as main study |
+| 5. Task 1 Workspace | http://47.106.117.27:3000/task/1/suggestions | Same as main study (but only 3 conditions) |
+| 6. Task 1 Post-test | http://47.106.117.27:3000/task/1/survey | Manipulation check (2 items, condition-specific) |
+| 7. Transition | http://47.106.117.27:3000/transition | Transition between tasks |
+| 8. Task 2 Brief | http://47.106.117.27:3000/task/2/brief | Same as main study |
+| 9. Task 2 Workspace | http://47.106.117.27:3000/task/2/suggestions | Same as main study |
+| 10. Task 2 Post-test | http://47.106.117.27:3000/task/2/survey | Manipulation check + Demographics (collected only in round 2) |
+| 11. Manipulation Check | http://47.106.117.27:3000/pilot/check | 3 items: 2 manipulation check + 1 attention check |
+| 12. Completion Page | http://47.106.117.27:3000/pilot/complete | Pilot thank-you page |
 
 ### Pilot Conditions (3 types)
 
@@ -59,15 +85,25 @@ Simplified flow: no baseline scales (demographics only), no post-task questionna
 | `friction` | Reflective pause mechanism |
 | `provocateur` | AI challenges thinking |
 
+### Pilot Retained Variables
+
+- Controls: Demographics (age, gender, English proficiency)
+- IV: Basic AI / Friction / Provocateur (3 conditions)
+- DV: Creative Self-Efficacy (CSE)
+- Manipulation check
+- Attention check: `attn_pilot`
+
 ---
 
 ## 3. Debug / Testing Pages
 
 | Link | Description |
 |------|------|
-| http://47.106.117.27:3000/debug/conditions | **Main Study Condition Launcher** — Select one of 6 conditions, skip consent/baseline, jump directly to tasks |
-| http://47.106.117.27:3000/debug/pilot | **Pilot Condition Launcher** — Select one of 3 pilot conditions, enter tasks directly in pilot mode |
-| http://47.106.117.27:3000/debug/data | **Data Viewer Dashboard** — Browse all participant data, filter by Mode (Main/Pilot), Condition, Completion status; expand to view baseline JSON, writing artifacts, interaction logs, post-test questionnaire raw data |
+| http://47.106.117.27:3000/debug/conditions?key=chi2026 | **Main Study Condition Launcher** — Select one of 6 conditions, skip consent/baseline, jump directly to tasks |
+| http://47.106.117.27:3000/debug/pilot?key=chi2026 | **Pilot Condition Launcher** — Select one of 3 pilot conditions, enter tasks directly in pilot mode |
+| http://47.106.117.27:3000/debug/data?key=chi2026 | **Data Viewer Dashboard** — Browse all participant data, filter by Mode (Main/Pilot), Condition, Completion status; expand to view baseline JSON, writing artifacts, interaction logs, post-test questionnaire raw data |
+
+> Debug pages require a key. Append `?key=chi2026` to the URL.
 
 ---
 
@@ -85,7 +121,7 @@ Base URL: `http://47.106.117.27:8000`
 
 | Method | Path | Description |
 |------|------|------|
-| POST | `/participants/init` | Create a participant. Params: `condition` (optional, for debugging), `study_mode` ("main"/"pilot") |
+| POST | `/participants/init` | Create a participant. Params: `condition` (optional, for debugging), `is_pilot` (bool) |
 | GET | `/participants/{id}` | Get participant info |
 | POST | `/participants/{id}/consent` | Record informed consent |
 | PATCH | `/participants/{id}/progress` | Update current page progress |
@@ -110,7 +146,7 @@ Base URL: `http://47.106.117.27:8000`
 | POST | `/responses/gate` | Save friction gate reflection data |
 | POST | `/responses/artifact` | Save writing artifact |
 | POST | `/responses/post-task` | Save post-test questionnaire (round=0 for pilot manipulation check) |
-| POST | `/responses/log-event` | Append an interaction log event |
+| POST | `/responses/log-event` | Append an interaction log event (task_begin / task_submit / chat_reply etc.) |
 
 ### 4.5 Debug Data (`/debug/data`)
 
@@ -129,6 +165,14 @@ Base URL: `http://47.106.117.27:8000`
 | Database tables | `participants`, `baseline_responses`, `task_sessions`, `post_task_responses` |
 | Pilot data distinction | `participants.study_mode` field ("main" or "pilot") |
 | AI service | DeepSeek API (configured in `/opt/systemdesign/backend/.env`) |
+
+### Timestamp Tracking
+
+| Event | Method | Description |
+|-------|--------|-------------|
+| `task_begin` | `log-event` API → `task_sessions.interaction_log` | ISO timestamp when user enters the task workspace |
+| `task_submit` | `log-event` API → `task_sessions.interaction_log` | ISO timestamp when user submits, with `dwell_seconds` + `char_count` |
+| `chat_reply` | `log-event` API → `task_sessions.interaction_log` | Each chat interaction logged |
 
 ---
 
@@ -165,16 +209,20 @@ cd /opt/systemdesign/frontend && npm run build
 ### Pilot Testing (recommended to start with these)
 
 - Official Pilot entry: http://47.106.117.27:3000/pilot
-- Debug Pilot (skip demographics): http://47.106.117.27:3000/debug/pilot
+- Debug Pilot (skip demographics): http://47.106.117.27:3000/debug/pilot?key=chi2026
 
 ### Main Study Testing
 
 - Official entry: http://47.106.117.27:3000/
-- Debug with specific condition (skip baseline): http://47.106.117.27:3000/debug/conditions
+- Debug with specific condition (skip baseline): http://47.106.117.27:3000/debug/conditions?key=chi2026
 - Enter with specific condition directly (e.g. friction): http://47.106.117.27:3000/consent?condition=friction
 
 ### Data Viewing
 
-- All data: http://47.106.117.27:3000/debug/data
+- All data: http://47.106.117.27:3000/debug/data?key=chi2026
 - Backend health check: http://47.106.117.27:8000/health
 - Backend API docs (Swagger): http://47.106.117.27:8000/docs
+
+---
+
+*Last updated: 2026-04-30*
