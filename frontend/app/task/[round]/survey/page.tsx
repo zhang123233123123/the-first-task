@@ -57,6 +57,7 @@ const SMI_PLANNING = [
 const SMI_SELF_CHECKING = [
   { key: "smi_sc2",  label: "During the task, I checked my work as I went." },
   { key: "smi_sc6",  label: "During the task, I corrected my errors." },
+  { key: "attn_posttask", label: "This is an attention check. Please select 'Agree' (6) for this item." },
   { key: "smi_sc10", label: "During the task, I almost always knew how much I had left to complete." },
   { key: "smi_sc14", label: "During the task, I kept track of my progress and, if necessary, changed my techniques or strategies." },
   { key: "smi_sc18", label: "During the task, I checked my accuracy as I progressed." },

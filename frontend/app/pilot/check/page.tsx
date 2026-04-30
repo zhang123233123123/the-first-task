@@ -16,6 +16,10 @@ const MC_ITEMS = [
     label: "The system made me pause and reflect before proceeding.",
   },
   {
+    key: "attn_pilot",
+    label: "This is an attention check. Please select 'Agree' (6) for this item.",
+  },
+  {
     key: "mc_provocation",
     label: "The AI challenged my thinking rather than simply helping me complete the task.",
   },
