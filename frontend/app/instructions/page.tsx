@@ -46,17 +46,10 @@ export default function InstructionsPage() {
   ];
 
   const handleContinue = async () => {
-    if (isPilot) {
-      if (participantId) {
-        await api.updateProgress(participantId, "task/1/brief");
-      }
-      router.push("/task/1/brief");
-    } else {
-      if (participantId) {
-        await api.updateProgress(participantId, "baseline");
-      }
-      router.push("/baseline");
+    if (participantId) {
+      await api.updateProgress(participantId, "tutorial");
     }
+    router.push("/tutorial");
   };
 
   return (
@@ -106,7 +99,7 @@ export default function InstructionsPage() {
         </div>
 
         <Button onClick={handleContinue} size="lg" className="w-full">
-          Got it — start the study
+          Got it — see the workspace
         </Button>
       </motion.div>
     </div>
