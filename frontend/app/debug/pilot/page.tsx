@@ -40,7 +40,7 @@ export default function DebugPilotPage() {
     setError(null);
 
     try {
-      const data = await api.initParticipant(condition, "pilot");
+      const data = await api.initParticipant(condition, true);
 
       setParticipant({
         participantId: data.participant_id,
@@ -48,7 +48,7 @@ export default function DebugPilotPage() {
         provocateurFlag: data.provocateur_flag,
         frictionFlag: data.friction_flag,
         taskOrder: data.task_order,
-        studyMode: "pilot",
+        isPilot: true,
       });
 
       await api.recordConsent(data.participant_id);

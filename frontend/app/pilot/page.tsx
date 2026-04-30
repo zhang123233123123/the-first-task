@@ -104,7 +104,7 @@ export default function PilotEntryPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await api.initParticipant(undefined, "pilot");
+      const result = await api.initParticipant(undefined, true);
       const pid = result.participant_id;
       await api.recordConsent(pid);
 
@@ -118,7 +118,7 @@ export default function PilotEntryPage() {
         provocateurFlag: assignResult.provocateur_flag ?? false,
         frictionFlag: assignResult.friction_flag ?? false,
         taskOrder: assignResult.task_order ?? [],
-        studyMode: "pilot",
+        isPilot: true,
       });
 
       await api.updateProgress(pid, "task/1/brief");

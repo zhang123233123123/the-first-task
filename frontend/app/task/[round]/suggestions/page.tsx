@@ -66,7 +66,7 @@ export default function SuggestionsPage({
   const round = parseInt(roundStr, 10);
 
   const router = useRouter();
-  const { participantId, taskOrder, setCurrentRound, studyMode } = useStore();
+  const { participantId, taskOrder, setCurrentRound, isPilot } = useStore();
 
   const [data, setData] = useState<SuggestionsData | null>(null);
   const [promptData, setPromptData] = useState<Record<string, unknown> | null>(null);
@@ -343,7 +343,7 @@ export default function SuggestionsPage({
     }
     sessionStorage.removeItem(`chi-timer-start-${round}`);
 
-    if (studyMode === "pilot") {
+    if (isPilot) {
       // Pilot: skip post-task survey, go to next task or manipulation check
       if (round === 1) {
         if (participantId) await api.updateProgress(participantId, "task/2/brief");
